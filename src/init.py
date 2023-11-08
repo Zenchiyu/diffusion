@@ -15,7 +15,7 @@ def init(cfg):
     
     # DataLoaders
     dl, info = load_dataset_and_make_dataloaders(
-        dataset_name=cfg.dataset.dataset_name,  # can be "FashionMNIST" for instance
+        dataset_name=cfg.dataset.name,  # can be "FashionMNIST" for instance
         root_dir=cfg.dataset.root_dir, # choose the directory to store the data 
         batch_size=cfg.dataset.batch_size,  # 32
         num_workers=cfg.dataset.num_workers,   # can use more workers if see the GPU is waiting for the batches
@@ -24,7 +24,7 @@ def init(cfg):
     # TODO: use the same dataloaders at evaluation time..
 
     # Create directory to save pictures of our samples
-    save_path = Path(cfg.sampling.save_path)
+    save_path = Path(cfg.common.sampling.save_path)
     save_path.mkdir(parents=True, exist_ok=True)
 
     diffusion = Diffusion(info.sigma_data,

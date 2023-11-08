@@ -12,13 +12,16 @@ from omegaconf import DictConfig, OmegaConf
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def trainer(cfg: DictConfig):
-    print(cfg)
+    print("Config:")
+    print(OmegaConf.to_yaml(cfg))
+    
     if cfg.wandb.mode == "online":
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
                          **cfg.wandb)
     
     model, optimizer, criterion, diffusion, dl, info, device, save_path = init(cfg)
-
+    print(f"\n\nDataset: {cfg.dataset.name}, Using device: {device}")
+    
     # TODO: add something to restart a run
 
     # Training
