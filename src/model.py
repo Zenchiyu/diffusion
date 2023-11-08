@@ -17,9 +17,16 @@ class Model(nn.Module):
         self.conv_in = nn.Conv2d(image_channels, nb_channels, kernel_size=3, padding=1)
         self.blocks = nn.ModuleList([ResidualBlock(nb_channels) for _ in range(num_blocks)])
         self.conv_out = nn.Conv2d(nb_channels, image_channels, kernel_size=3, padding=1)
-    
+
     def forward(self, noisy_input: torch.Tensor, c_noise: torch.Tensor) -> torch.Tensor:
         cond = self.noise_emb(c_noise) # TODO: not used yet
+        # Apply ResNet on noisy input
+        # Compared to the embryo at: https://fleuret.org/dlc/src/dlc_practical_6_embryo.py
+        # where we have:
+        # Conv->BN->ReLU->manytimes([Conv->BN->ReLU->Conv->BN]->ReLU)->AvgPool->FC
+        # This network has:
+        # Conv->manytimes([BN->ReLU->Conv->BN->ReLU->Conv])->Conv
+        # where [.] indicates a residual connection
         x = self.conv_in(noisy_input)
         for block in self.blocks:
             x = block(x)
@@ -47,6 +54,7 @@ class ResidualBlock(nn.Module):
         self.conv2 = nn.Conv2d(nb_channels, nb_channels, kernel_size=3, stride=1, padding=1)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # BN -> ReLU -> Conv instead of Conv -> BN -> ReLU
         y = self.conv1(F.relu(self.norm1(x)))
         y = self.conv2(F.relu(self.norm2(y)))
-        return x + y
+        return x + y  # residual connection
