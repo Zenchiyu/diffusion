@@ -41,7 +41,10 @@ class NoiseEmbedding(nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         assert input.ndim == 1
+        # Outer-product; f is of shape input.shape[0] x cond_channels//2
         f = 2 * torch.pi * input.unsqueeze(1) @ self.weight
+        # Output is of shape input.shape[0] x cond_channels where
+        # first half of the columns use cos and the other half use sin.
         return torch.cat([f.cos(), f.sin()], dim=-1)
 
 

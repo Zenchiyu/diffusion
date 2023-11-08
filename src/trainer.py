@@ -30,13 +30,13 @@ def trainer(cfg: DictConfig):
         for X, y in dl.train:
             X = X.to(device=device)  # N x C x H x W
 
-            noise_level = diffusion.sample_sigma((X.shape[0], 1, 1, 1))
+            noise_level = diffusion.sample_sigma(X.shape[0])
             cin = diffusion.cin(noise_level)
             cout = diffusion.cout(noise_level)
             cskip = diffusion.cskip(noise_level)
             cnoise = diffusion.cnoise(noise_level)
             
-            X_noisy = diffusion.add_noise(X, noise_level)
+            X_noisy = diffusion.add_noise(X, noise_level.view(-1, 1, 1, 1))
             output = model(cin*X_noisy, cnoise)
             target = (X-cskip*X_noisy)/cout
 
