@@ -38,18 +38,18 @@ def sample(num_samples: int,
     return X_noisy
 
 def display(x: torch.tensor) -> None:
+    # Clamp/clip and convert to displayable format
     x = x.clamp(-1, 1).add(1).div(2).mul(255).byte()  # [-1., 1.] -> [0., 1.] -> [0, 255]
     x = make_grid(x)
     x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
-    with torch.no_grad():
-        plt.imshow(x)
+    plt.imshow(x)
 
-def save(x: torch.tensor, path: str="samples.png") -> None:
+def save(x: torch.tensor) -> None:
+    # Clamp/clip and convert to displayable format
     x = x.clamp(-1, 1).add(1).div(2).mul(255).byte()  # [-1., 1.] -> [0., 1.] -> [0, 255]
     x = make_grid(x)
     x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
-    os.makedirs(path, exist_ok=True)
-    x.save(path)
+
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
@@ -57,7 +57,7 @@ def sampler(cfg: DictConfig):
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
                          **cfg.wandb)
     
-    model, optimizer, criterion, diffusion, dl, info, device = init(cfg)
+    model, optimizer, criterion, diffusion, dl, info, device, save_path = init(cfg)
 
     # TODO: Load checkpoint:
 

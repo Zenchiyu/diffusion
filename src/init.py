@@ -6,6 +6,8 @@ import torch.optim as optim
 from model import Model
 from diffusion import Diffusion
 from data import load_dataset_and_make_dataloaders  # Made by Eloi
+from pathlib import Path
+
 
 def init(cfg):
     gpu = torch.cuda.is_available()
@@ -20,12 +22,16 @@ def init(cfg):
         pin_memory=gpu,  # use pin memory if plan to move the data to GPU
     )
     # TODO: use the same dataloaders at evaluation time..
-    
+
+    # Create directory to save pictures of our samples
+    save_path = Path(cfg.sampling.save_path)
+    save_path.mkdir(parents=True, exist_ok=True)
+
     diffusion = Diffusion(info.sigma_data,
                           cfg.diffusion.sigma_min,
                           cfg.diffusion.sigma_max)
+    # XXX: info.sigma_data is an estimation of the std based on a "huge" batch
 
-    # XXX: info.sigma_data  # estimation of the std based on a "huge" batch
     # Model and criterion
     model = Model(info.image_channels,
                   cfg.model.nb_channels,
@@ -37,4 +43,4 @@ def init(cfg):
 
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=cfg.optim.lr)
-    return model, optimizer, criterion, diffusion, dl, info, device
+    return model, optimizer, criterion, diffusion, dl, info, device, save_path
