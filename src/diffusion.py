@@ -12,6 +12,11 @@ class Diffusion:
         self.sigma_min = sigma_min
         self.sigma_max = sigma_max
 
+        self.cin = lambda sigma: 1/torch.sqrt(sigma_data**2 + sigma**2)
+        self.cout = lambda sigma: sigma*sigma_data/torch.sqrt(sigma_data**2 + sigma**2)
+        self.cskip = lambda sigma: sigma_data**2/(sigma_data**2 + sigma**2)
+        self.cnoise = lambda sigma: torch.log(sigma)/4
+
     @staticmethod
     def add_noise(x: torch.FloatTensor,
                   noise_level: float):

@@ -56,7 +56,7 @@ def trainer(cfg: DictConfig):
             
             noise_level = 0
             X_noisy = diffusion.add_noise(X, noise_level)
-            output = model(cin*(X_noisy), cnoise(noise_level))
+            output = model(cin*X_noisy, cnoise)
             target = (X-cskip*X_noisy)/cout
 
             loss = criterion(output, target)  # MSE
