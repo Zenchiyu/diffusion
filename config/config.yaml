@@ -10,7 +10,7 @@ common:
     save_path: ./images/samples.png
 
 dataset:
-  dataset: FashionMNIST
+  name: FashionMNIST
   root_dir: ../data  # relative to src directory
   batch_size: 32
   num_workers: 0
