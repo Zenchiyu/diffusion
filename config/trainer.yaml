@@ -1,0 +1,25 @@
+wandb:
+  project: diffusion
+  mode: online
+
+wandb_watch: True  # log more info
+
+common:
+  nb_epochs: 10
+
+dataset: FashionMNIST
+  dataset_name: FashionMNIST
+  root_dir: ../data  # relative to src directory
+  batch_size: 32
+  num_workers: 0
+
+diffusion:
+  sigma_min: 2e-3
+  sigma_max: 80
+
+model:
+  num_blocks: 6
+  cond_channels: 2
+
+optim:  # Adam optimizer
+  lr: 1e-4
