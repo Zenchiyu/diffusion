@@ -15,13 +15,15 @@ def trainer(cfg: DictConfig):
     print("Config:")
     print(OmegaConf.to_yaml(cfg))
     
-    if cfg.wandb.mode == "online":
-        run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
-                         **cfg.wandb)
-    
     model, optimizer, criterion, diffusion, dl, info, device, save_path, chkpt_path = init(cfg)
     print(f"\n\nDataset: {cfg.dataset.name}, Using device: {device}")
     
+    if cfg.wandb.mode == "online":
+        run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
+                         **cfg.wandb)
+        run.watch(model, criterion,
+                           log="all", log_graph=True)
+        
     # Restart a run
     # https://fleuret.org/dlc/materials/dlc-handout-11-4-persistence.pdf
     nb_epochs_finished = 0
@@ -34,9 +36,6 @@ def trainer(cfg: DictConfig):
         print(f"\nStarting from checkpoint with {nb_epochs_finished} finished epochs.")
     except FileNotFoundError:
         print("Starting from scratch.")
-    # except:
-    #     print("Error when loading the checkpoint.")
-    #     exit(1)
 
     # Training
     acc_losses = []
