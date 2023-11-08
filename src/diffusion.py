@@ -27,12 +27,22 @@ class Diffusion:
                      n: list[int]|tuple[int]|int,
                      loc: float=-1.2,
                      scale: float=1.2):
+        """
+        Sample noise levels following a log-normal distribution.
+        These noise levels will be used in the training phase,
+        to create noisy samples by using "add_noise".
+        """
         # From Eloi's template
         # exp(Z) where Z follows a normal distribution then clip
         return (torch.randn(n) * scale + loc).exp().clip(self.sigma_min, self.sigma_max)
 
     def build_sigma_schedule(self, steps, rho=7):
+        """
+        Build sigma schedule of decreasing noise levels
+        that will be used in the sampling procedure, not training phase.
+        """
         # From Eloi's template
+        # TODO: find whether rho is like some temperature?
         min_inv_rho = self.sigma_min ** (1 / rho)
         max_inv_rho = self.sigma_max ** (1 / rho)
         sigmas = (max_inv_rho + torch.linspace(0, 1, steps) * (min_inv_rho - max_inv_rho)) ** rho
