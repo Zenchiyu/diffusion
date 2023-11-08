@@ -30,7 +30,8 @@ def init(cfg):
     chkpt_path = Path(cfg.common.training.chkpt_path)
     chkpt_path.parent.mkdir(parents=True, exist_ok=True)
     
-    diffusion = Diffusion(info.sigma_data,
+    diffusion = Diffusion(device,
+                          info.sigma_data,
                           cfg.diffusion.sigma_min,
                           cfg.diffusion.sigma_max)
     # XXX: info.sigma_data is an estimation of the std based on a "huge" batch

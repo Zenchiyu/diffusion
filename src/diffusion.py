@@ -5,9 +5,11 @@ import torch
 
 class Diffusion:
     def __init__(self,
+                 device: str|torch.device,
                  sigma_data: float,
                  sigma_min: float=2e-3,
                  sigma_max: float=80) -> None:
+        self.device = device
         self.sigma_data = sigma_data
         self.sigma_min = sigma_min
         self.sigma_max = sigma_max
@@ -21,7 +23,8 @@ class Diffusion:
     def add_noise(x: torch.FloatTensor,
                   noise_level: float|torch.FloatTensor):
         # noising procedure using re-param trick
-        return x + noise_level*torch.normal(0, 1, size=noise_level.shape)
+        return x + noise_level*torch.normal(0, 1, size=noise_level.shape,
+                                            device=x.device)
 
     def sample_sigma(self,
                      n: list[int]|tuple[int]|int,
@@ -34,7 +37,7 @@ class Diffusion:
         """
         # From Eloi's template
         # exp(Z) where Z follows a normal distribution then clip
-        return (torch.randn(n) * scale + loc).exp().clip(self.sigma_min, self.sigma_max)
+        return (torch.randn(n, device=self.device) * scale + loc).exp().clip(self.sigma_min, self.sigma_max)
 
     def build_sigma_schedule(self, steps, rho=7):
         """
@@ -45,7 +48,7 @@ class Diffusion:
         # TODO: find whether rho is like some temperature?
         min_inv_rho = self.sigma_min ** (1 / rho)
         max_inv_rho = self.sigma_max ** (1 / rho)
-        sigmas = (max_inv_rho + torch.linspace(0, 1, steps) * (min_inv_rho - max_inv_rho)) ** rho
+        sigmas = (max_inv_rho + torch.linspace(0, 1, steps, dtype=self.device) * (min_inv_rho - max_inv_rho)) ** rho
         return sigmas
     
 if __name__ == "__main__":
