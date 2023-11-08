@@ -24,7 +24,7 @@ def sample(num_samples: int,
     cnoise = diffusion.cnoise
     D = lambda X_noisy, sigma: cskip(sigma)*X_noisy+cout(sigma)*model(cin(sigma)*X_noisy, cnoise(sigma))
 
-    X_noisy = torch.randn(num_samples, 1, 32, 32) * sigmas[0]  # Initialize with pure gaussian noise ~ N(0, sigmas[0])
+    X_noisy = torch.randn(num_samples, 1, 32, 32, device=diffusion.device) * sigmas[0]  # Initialize with pure gaussian noise ~ N(0, sigmas[0])
     for i, sigma in enumerate(sigmas):
         with torch.no_grad():
             X_denoised = D(X_noisy, sigma)  # based on our model, try to denoise X_noisy
