@@ -1,3 +1,5 @@
+# Made by Stephane Nguyen following
+# notebooks/instructions.ipynb
 import torch
 from init import init
 from tqdm import tqdm
@@ -7,7 +9,7 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 
 
-@hydra.main(version_base=None, config_path="../config", config_name="trainer")
+@hydra.main(version_base=None, config_path="../config", config_name="config")
 def trainer(cfg: DictConfig):
     if cfg.wandb.mode == "online":
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
