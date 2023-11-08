@@ -3,6 +3,7 @@
 import torch
 from init import init
 from tqdm import tqdm
+from sampler import sample, save
 
 import wandb
 import hydra
@@ -17,8 +18,11 @@ def trainer(cfg: DictConfig):
     
     model, optimizer, criterion, diffusion, dl, info, device = init(cfg)
 
+    # TODO: add something to restart a run
+
     # Training
     for e in tqdm(range(cfg.common.nb_epochs)):
+        acc_loss = 0
         for X, y in dl.train:
             X = X.to(device=device)
 
@@ -37,7 +41,19 @@ def trainer(cfg: DictConfig):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
+            acc_loss += loss.item()
+
+        samples = sample(32, model, diffusion)
+        save(samples, cfg.sampling.save_path)
         # TODO: wandb log
+        if cfg.wandb.mode == "online":
+            wandb.log({"epoch": e,
+                       "acc_loss": acc_loss,
+                       })
+    
+    if cfg.wandb.mode == "online":
+        wandb.finish()
 
 if __name__ == "__main__":
-    pass
+    trainer()

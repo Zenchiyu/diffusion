@@ -6,8 +6,10 @@ wandb_watch: True  # log more info
 
 common:
   nb_epochs: 10
+  sampling:
+    save_path: ./images/samples.png
 
-dataset: FashionMNIST
+dataset:
   dataset_name: FashionMNIST
   root_dir: ../data  # relative to src directory
   batch_size: 32
@@ -18,7 +20,8 @@ diffusion:
   sigma_max: 80
 
 model:
-  num_blocks: 6
+  nb_channels: 64  # resnet channels
+  num_blocks: 6    # resnet blocks
   cond_channels: 2
 
 optim:  # Adam optimizer

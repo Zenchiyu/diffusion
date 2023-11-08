@@ -28,7 +28,7 @@ def init(cfg):
     # XXX: info.sigma_data  # estimation of the std based on a "huge" batch
     # Model and criterion
     model = Model(info.image_channels,
-                  info.nb_channels,
+                  cfg.model.nb_channels,
                   cfg.model.num_blocks,
                   cfg.model.cond_channels)
     criterion = nn.MSELoss()

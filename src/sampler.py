@@ -1,6 +1,7 @@
 # Made by Stephane Nguyen following
 # notebooks/instructions.ipynb
 import matplotlib.pyplot as plt
+import os
 import torch
 from diffusion import Diffusion
 from init import init
@@ -15,6 +16,7 @@ from omegaconf import DictConfig, OmegaConf
 def sample(num_samples: int,
            model: torch.nn.Module,
            diffusion: Diffusion) -> torch.tensor:
+    model.eval()
     sigmas = diffusion.build_sigma_schedule(steps=50, rho=7)  # Sequence of decreasing sigmas
     cin = diffusion.cin
     cout = diffusion.cout
@@ -31,6 +33,7 @@ def sample(num_samples: int,
         d = (X_noisy - X_denoised) / sigma
         
         X_noisy = X_noisy + d * (sigma_next - sigma)  # Perform one step of Euler's method
+    model.train()
     # Final X_noisy contains the sampled images
     return X_noisy
 
@@ -38,7 +41,15 @@ def display(x: torch.tensor) -> None:
     x = x.clamp(-1, 1).add(1).div(2).mul(255).byte()  # [-1., 1.] -> [0., 1.] -> [0, 255]
     x = make_grid(x)
     x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
-    plt.imshow(x)
+    with torch.no_grad():
+        plt.imshow(x)
+
+def save(x: torch.tensor, path: str="samples.png") -> None:
+    x = x.clamp(-1, 1).add(1).div(2).mul(255).byte()  # [-1., 1.] -> [0., 1.] -> [0, 255]
+    x = make_grid(x)
+    x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
+    os.makedirs(path, exist_ok=True)
+    x.save(path)
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
@@ -54,3 +65,6 @@ def sampler(cfg: DictConfig):
     num_samples = 8
     samples = sample(num_samples, model, diffusion)
     display(samples)
+
+if __name__ == "__main__":
+    sampler()
