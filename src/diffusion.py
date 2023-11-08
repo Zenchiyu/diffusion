@@ -48,7 +48,7 @@ class Diffusion:
         # TODO: find whether rho is like some temperature?
         min_inv_rho = self.sigma_min ** (1 / rho)
         max_inv_rho = self.sigma_max ** (1 / rho)
-        sigmas = (max_inv_rho + torch.linspace(0, 1, steps, dtype=self.device) * (min_inv_rho - max_inv_rho)) ** rho
+        sigmas = (max_inv_rho + torch.linspace(0, 1, steps, device=self.device) * (min_inv_rho - max_inv_rho)) ** rho
         return sigmas
     
 if __name__ == "__main__":
