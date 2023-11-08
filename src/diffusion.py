@@ -12,9 +12,9 @@ class Diffusion:
         self.sigma_min = sigma_min
         self.sigma_max = sigma_max
 
-        self.cin = lambda sigma: 1/torch.sqrt(sigma_data**2 + sigma**2).view(-1, 1, 1, 1)
-        self.cout = lambda sigma: sigma*sigma_data/torch.sqrt(sigma_data**2 + sigma**2).view(-1, 1, 1, 1)
-        self.cskip = lambda sigma: sigma_data**2/(sigma_data**2 + sigma**2).view(-1, 1, 1, 1)
+        self.cin = lambda sigma: (1/torch.sqrt(sigma_data**2 + sigma**2)).view(-1, 1, 1, 1)
+        self.cout = lambda sigma: (sigma*sigma_data/torch.sqrt(sigma_data**2 + sigma**2)).view(-1, 1, 1, 1)
+        self.cskip = lambda sigma: (sigma_data**2/(sigma_data**2 + sigma**2)).view(-1, 1, 1, 1)
         self.cnoise = lambda sigma: torch.log(sigma)/4
 
     @staticmethod

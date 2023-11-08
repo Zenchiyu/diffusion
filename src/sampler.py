@@ -57,9 +57,11 @@ def sampler(cfg: DictConfig):
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
                          **cfg.wandb)
     
-    model, optimizer, criterion, diffusion, dl, info, device, save_path = init(cfg)
+    model, _, _, diffusion, dl, _, device, save_path, chkpt_path = init(cfg)
 
-    # TODO: Load checkpoint:
+    # Load model state dict from checkpoint:
+    chkpt = torch.load(chkpt_path)
+    model.load_state_dict(chkpt["model_state_dict"])
 
     # Sample and display
     num_samples = 8

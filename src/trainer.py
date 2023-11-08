@@ -19,13 +19,28 @@ def trainer(cfg: DictConfig):
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
                          **cfg.wandb)
     
-    model, optimizer, criterion, diffusion, dl, info, device, save_path = init(cfg)
+    model, optimizer, criterion, diffusion, dl, info, device, save_path, chkpt_path = init(cfg)
     print(f"\n\nDataset: {cfg.dataset.name}, Using device: {device}")
     
-    # TODO: add something to restart a run
+    # Restart a run
+    # https://fleuret.org/dlc/materials/dlc-handout-11-4-persistence.pdf
+    nb_epochs_finished = 0
+    try:
+        # Load model state dict from checkpoint:
+        chkpt = torch.load(chkpt_path)
+        model.load_state_dict(chkpt["model_state_dict"])
+        optimizer.load_state_dict(chkpt["optimizer_state_dict"])
+        nb_epochs_finished = chkpt_path["nb_epochs_finished"]
+        print(f"\nStarting from checkpoint with {nb_epochs_finished} finished epochs.")
+    except FileNotFoundError:
+        print("Starting from scratch.")
+    except:
+        print("Error when loading the checkpoint.")
+        exit(1)
 
     # Training
-    for e in tqdm(range(cfg.common.nb_epochs)):
+    acc_losses = []
+    for e in tqdm(range(nb_epochs_finished, cfg.common.nb_epochs)):
         acc_loss = 0
         for X, y in dl.train:
             X = X.to(device=device)  # N x C x H x W
@@ -48,13 +63,20 @@ def trainer(cfg: DictConfig):
 
             acc_loss += loss.item()
 
+        acc_losses.append(acc_loss)
         samples = sample(32, model, diffusion)  # it's switching between eval and train modes
         save(samples)
-        # TODO: wandb log
+        # Save checkpoint
+        torch.save({"nb_epochs_finished": e+1,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "acc_losses": acc_losses},
+                    chkpt_path)
         if cfg.wandb.mode == "online":
             wandb.log({"epoch": e,
                        "acc_loss": acc_loss,
                        "samples": wandb.Image(save_path)})
+        
     
     if cfg.wandb.mode == "online":
         wandb.finish()

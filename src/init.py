@@ -26,7 +26,10 @@ def init(cfg):
     # Create directory to save pictures of our samples
     save_path = Path(cfg.common.sampling.save_path)
     save_path.mkdir(parents=True, exist_ok=True)
-
+    # Create directory to save checkpoints
+    chkpt_path = Path(cfg.common.training.chkpt_path)
+    chkpt_path.mkdir(parents=True, exist_ok=True)
+    
     diffusion = Diffusion(info.sigma_data,
                           cfg.diffusion.sigma_min,
                           cfg.diffusion.sigma_max)
@@ -43,4 +46,4 @@ def init(cfg):
 
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=cfg.optim.lr)
-    return model, optimizer, criterion, diffusion, dl, info, device, save_path
+    return model, optimizer, criterion, diffusion, dl, info, device, save_path, chkpt_path

@@ -8,6 +8,8 @@ common:
   nb_epochs: 10
   sampling:
     save_path: ./images/samples.png
+  training:
+    chkpt_path: ../checkpoints/checkpoint.pth
 
 dataset:
   name: FashionMNIST
