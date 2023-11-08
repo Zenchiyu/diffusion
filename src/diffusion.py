@@ -15,7 +15,7 @@ class Diffusion:
         self.cin = lambda sigma: (1/torch.sqrt(sigma_data**2 + sigma**2)).view(-1, 1, 1, 1)
         self.cout = lambda sigma: (sigma*sigma_data/torch.sqrt(sigma_data**2 + sigma**2)).view(-1, 1, 1, 1)
         self.cskip = lambda sigma: (sigma_data**2/(sigma_data**2 + sigma**2)).view(-1, 1, 1, 1)
-        self.cnoise = lambda sigma: torch.log(sigma)/4
+        self.cnoise = lambda sigma: (torch.log(sigma)/4).view(-1)  # 1-D
 
     @staticmethod
     def add_noise(x: torch.FloatTensor,

@@ -30,13 +30,13 @@ def trainer(cfg: DictConfig):
         chkpt = torch.load(chkpt_path)
         model.load_state_dict(chkpt["model_state_dict"])
         optimizer.load_state_dict(chkpt["optimizer_state_dict"])
-        nb_epochs_finished = chkpt_path["nb_epochs_finished"]
+        nb_epochs_finished = chkpt["nb_epochs_finished"]
         print(f"\nStarting from checkpoint with {nb_epochs_finished} finished epochs.")
     except FileNotFoundError:
         print("Starting from scratch.")
-    except:
-        print("Error when loading the checkpoint.")
-        exit(1)
+    # except:
+    #     print("Error when loading the checkpoint.")
+    #     exit(1)
 
     # Training
     acc_losses = []
@@ -64,8 +64,8 @@ def trainer(cfg: DictConfig):
             acc_loss += loss.item()
 
         acc_losses.append(acc_loss)
-        samples = sample(32, model, diffusion)  # it's switching between eval and train modes
-        save(samples)
+        samples = sample(8, model, diffusion)  # it's switching between eval and train modes
+        save(samples, str(save_path))
         # Save checkpoint
         torch.save({"nb_epochs_finished": e+1,
                     "model_state_dict": model.state_dict(),
@@ -75,7 +75,7 @@ def trainer(cfg: DictConfig):
         if cfg.wandb.mode == "online":
             wandb.log({"epoch": e,
                        "acc_loss": acc_loss,
-                       "samples": wandb.Image(save_path)})
+                       "samples": wandb.Image(str(save_path))})
         
     
     if cfg.wandb.mode == "online":

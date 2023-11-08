@@ -7,13 +7,13 @@ wandb_watch: True  # log more info
 common:
   nb_epochs: 10
   sampling:
-    save_path: ./images/samples.png
+    save_path: ./src/images/samples.png  # relative to cwd
   training:
-    chkpt_path: ../checkpoints/checkpoint.pth
+    chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
 
 dataset:
   name: FashionMNIST
-  root_dir: ../data  # relative to src directory
+  root_dir: ./data  # relative to cwd
   batch_size: 32
   num_workers: 0
 

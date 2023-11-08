@@ -25,10 +25,10 @@ def init(cfg):
 
     # Create directory to save pictures of our samples
     save_path = Path(cfg.common.sampling.save_path)
-    save_path.mkdir(parents=True, exist_ok=True)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
     # Create directory to save checkpoints
     chkpt_path = Path(cfg.common.training.chkpt_path)
-    chkpt_path.mkdir(parents=True, exist_ok=True)
+    chkpt_path.parent.mkdir(parents=True, exist_ok=True)
     
     diffusion = Diffusion(info.sigma_data,
                           cfg.diffusion.sigma_min,

@@ -21,7 +21,7 @@ def sample(num_samples: int,
     cin = diffusion.cin
     cout = diffusion.cout
     cskip = diffusion.cskip
-    cnoise = diffusion.cnoise 
+    cnoise = diffusion.cnoise
     D = lambda X_noisy, sigma: cskip(sigma)*X_noisy+cout(sigma)*model(cin(sigma)*X_noisy, cnoise(sigma))
 
     X_noisy = torch.randn(num_samples, 1, 32, 32) * sigmas[0]  # Initialize with pure gaussian noise ~ N(0, sigmas[0])
@@ -44,12 +44,12 @@ def display(x: torch.tensor) -> None:
     x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
     plt.imshow(x)
 
-def save(x: torch.tensor) -> None:
+def save(x: torch.tensor, save_path: str) -> None:
     # Clamp/clip and convert to displayable format
     x = x.clamp(-1, 1).add(1).div(2).mul(255).byte()  # [-1., 1.] -> [0., 1.] -> [0, 255]
     x = make_grid(x)
     x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
-
+    x.save(save_path)
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
