@@ -15,6 +15,7 @@ def trainer(cfg: DictConfig):
     print("Config:")
     print(OmegaConf.to_yaml(cfg))
     
+    # TODO: work with same dataset!
     model, optimizer, criterion, diffusion, dl, info, device, save_path, chkpt_path = init(cfg)
     print(f"\n\nDataset: {cfg.dataset.name}, Using device: {device}")
     
@@ -63,7 +64,9 @@ def trainer(cfg: DictConfig):
             acc_loss += loss.item()
 
         acc_losses.append(acc_loss)
-        samples = sample(8, model, diffusion)  # it's switching between eval and train modes
+        samples = sample(8, info.image_channels,
+                         model, diffusion,
+                         cfg.common.sampling.num_steps)  # it's switching between eval and train modes
         save(samples, str(save_path))
         # Save checkpoint
         torch.save({"nb_epochs_finished": e+1,

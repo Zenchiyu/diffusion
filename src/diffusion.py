@@ -21,15 +21,15 @@ class Diffusion:
 
     @staticmethod
     def add_noise(x: torch.FloatTensor,
-                  noise_level: float|torch.FloatTensor):
+                  noise_level: torch.FloatTensor) -> torch.FloatTensor:
         # noising procedure using re-param trick
-        return x + noise_level*torch.normal(0, 1, size=noise_level.shape,
-                                            device=x.device)
+        return x + noise_level*torch.randn(size=x.shape, device=x.device)
+    #torch.randn(size=noise_level.shape, device=x.device)
 
     def sample_sigma(self,
                      n: list[int]|tuple[int]|int,
                      loc: float=-1.2,
-                     scale: float=1.2):
+                     scale: float=1.2) -> torch.FloatTensor:
         """
         Sample noise levels following a log-normal distribution.
         These noise levels will be used in the training phase,
@@ -39,7 +39,9 @@ class Diffusion:
         # exp(Z) where Z follows a normal distribution then clip
         return (torch.randn(n, device=self.device) * scale + loc).exp().clip(self.sigma_min, self.sigma_max)
 
-    def build_sigma_schedule(self, steps, rho=7):
+    def build_sigma_schedule(self,
+                             steps: int,
+                             rho: float|int=7) -> torch.FloatTensor:
         """
         Build sigma schedule of decreasing noise levels
         that will be used in the sampling procedure, not training phase.
