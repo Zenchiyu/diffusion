@@ -31,7 +31,7 @@ def load_dataset(dataset_name='FashionMNIST', root_dir='data') -> Tuple[Dataset,
         case 'FashionMNIST':
             t = T.Compose([T.ToTensor(), T.Pad(2), T.Normalize(mean=(0.5,), std=(0.5,))])
             train_dataset = FashionMNIST(root_dir, download=True, transform=t)
-            train_dataset, valid_dataset = random_split(train_dataset, [50000, 10000])
+            train_dataset, valid_dataset = random_split(train_dataset, [50000, 10000])  # both come from the training set
             num_classes = 10
         
         case 'CelebA':
