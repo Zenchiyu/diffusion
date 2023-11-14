@@ -6,14 +6,16 @@ import torch.optim as optim
 from model import Model
 from diffusion import Diffusion
 from data import load_dataset_and_make_dataloaders  # Made by Eloi
+
 from pathlib import Path
+from omegaconf import DictConfig
 
 
-def init(cfg):
+def init(cfg: DictConfig):
     gpu = torch.cuda.is_available()
     device = torch.device('cuda:0' if gpu else 'cpu')
     
-    # DataLoaders
+    # DataLoaders (they're based on )
     dl, info = load_dataset_and_make_dataloaders(
         dataset_name=cfg.dataset.name,  # can be "FashionMNIST" for instance
         root_dir=cfg.dataset.root_dir, # choose the directory to store the data 
@@ -21,8 +23,9 @@ def init(cfg):
         num_workers=cfg.dataset.num_workers,   # can use more workers if see the GPU is waiting for the batches
         pin_memory=gpu,  # use pin memory if plan to move the data to GPU
     )
-    # TODO: use the same dataloaders at evaluation time..
-
+    # XXX: At evaluation time to compute the FID we need to use the
+    # "true test set" using train=False.
+    
     # Create directory to save pictures of our samples
     save_path = Path(cfg.common.sampling.save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)

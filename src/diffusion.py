@@ -22,10 +22,9 @@ class Diffusion:
     @staticmethod
     def add_noise(x: torch.FloatTensor,
                   noise_level: torch.FloatTensor) -> torch.FloatTensor:
-        # noising procedure using re-param trick
+        # Noising procedure using re-param trick
         return x + noise_level*torch.randn(size=x.shape, device=x.device)
-    #torch.randn(size=noise_level.shape, device=x.device)
-
+    
     def sample_sigma(self,
                      n: list[int]|tuple[int]|int,
                      loc: float=-1.2,

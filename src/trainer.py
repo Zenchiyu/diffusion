@@ -1,12 +1,13 @@
 # Made by Stephane Nguyen following
 # notebooks/instructions.ipynb
+import hydra
 import torch
+import wandb
+
 from init import init
 from sampler import sample, save
-from tqdm import tqdm
 
-import wandb
-import hydra
+from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
 
 
@@ -15,7 +16,7 @@ def trainer(cfg: DictConfig):
     print("Config:")
     print(OmegaConf.to_yaml(cfg))
     
-    # TODO: work with same dataset!
+    # TODO: work with same dataset if continue a run!
     model, optimizer, criterion, diffusion, dl, info, device, save_path, chkpt_path = init(cfg)
     print(f"\n\nDataset: {cfg.dataset.name}, Using device: {device}")
     
@@ -64,8 +65,11 @@ def trainer(cfg: DictConfig):
             acc_loss += loss.item()
 
         acc_losses.append(acc_loss)
-        samples = sample(8, info.image_channels,
-                         model, diffusion,
+        samples = sample(8,
+                         info.image_channels,
+                         info.image_size,
+                         model,
+                         diffusion,
                          cfg.common.sampling.num_steps)  # it's switching between eval and train modes
         save(samples, str(save_path))
         # Save checkpoint
