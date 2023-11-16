@@ -25,8 +25,8 @@ diffusion:
 model:
   nb_channels: 64  # resnet channels
   num_blocks: 10  #25    # resnet blocks
-  cond_channels: 2
-  use_cond: False  # True -> use conditional batch norm given noise
+  cond_channels: 8
+  use_cond: True  # True -> use conditional batch norm given noise
 
 optim:  # Adam optimizer
   lr: 1e-4
