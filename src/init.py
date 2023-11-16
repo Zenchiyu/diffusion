@@ -43,7 +43,8 @@ def init(cfg: DictConfig):
     model = Model(info.image_channels,
                   cfg.model.nb_channels,
                   cfg.model.num_blocks,
-                  cfg.model.cond_channels)
+                  cfg.model.cond_channels,
+                  cfg.model.use_cond)
     criterion = nn.MSELoss()
     model.to(device=device)
     criterion.to(device=device)

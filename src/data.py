@@ -3,7 +3,7 @@ from collections import namedtuple
 from typing import Optional, Tuple
 
 from torch.utils.data import default_collate, DataLoader, Dataset, random_split
-from torchvision.datasets import CelebA, FashionMNIST
+from torchvision.datasets import CelebA, FashionMNIST, CIFAR10
 import torchvision.transforms as T
 
 
@@ -39,6 +39,12 @@ def load_dataset(dataset_name='FashionMNIST', root_dir='data') -> Tuple[Dataset,
             train_dataset = CelebA(root_dir, download=True, transform=t)
             train_dataset, valid_dataset = random_split(train_dataset, [150000, 12770])
             num_classes = None
+
+        case 'CIFAR10':
+            t = T.Compose([T.ToTensor(), T.Normalize(mean=(0.5,), std=(0.5,))])
+            train_dataset = CIFAR10(root_dir, download=True, transform=t)
+            train_dataset, valid_dataset = random_split(train_dataset, [40000, 10000])
+            num_classes = 10
         
         case other:
             raise RuntimeError('Unknown dataset: ' + other)

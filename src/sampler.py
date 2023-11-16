@@ -38,7 +38,8 @@ def sample(num_samples: int,
 
     for i, sigma in enumerate(sigmas):
         with torch.no_grad():
-            X_denoised = D(X_noisy, sigma)  # based on our model, try to denoise X_noisy
+            s = sigma.expand(X_noisy.shape[0])
+            X_denoised = D(X_noisy, s)  # based on our model, try to denoise X_noisy
         
         sigma_next = sigmas[i + 1] if i < len(sigmas) - 1 else 0
         d = (X_noisy - X_denoised) / sigma  # derivative
