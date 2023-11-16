@@ -77,7 +77,7 @@ def sampler(cfg: DictConfig):
     model, _, _, diffusion, dl, info, device, save_path, chkpt_path = init(cfg)
 
     # Load model state dict from checkpoint:
-    chkpt = torch.load(chkpt_path)
+    chkpt = torch.load(chkpt_path, map_location=device)
     model.load_state_dict(chkpt["model_state_dict"])
 
     # Sample and display

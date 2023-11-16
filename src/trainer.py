@@ -6,7 +6,9 @@ import wandb
 
 from init import init
 from sampler import sample, save
+from utils import copy_config, copy_chkpt
 
+from datetime import date
 from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
 
@@ -20,18 +22,22 @@ def trainer(cfg: DictConfig):
     model, optimizer, criterion, diffusion, dl, info, device, save_path, chkpt_path = init(cfg)
     print(f"\n\nDataset: {cfg.dataset.name}, Using device: {device}")
     
+    begin_date = str(date.today())
+
     if cfg.wandb.mode == "online":
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
                          **cfg.wandb)
         run.watch(model, criterion,
                            log="all", log_graph=True)
         
+        copy_config(run, begin_date=begin_date)
+        
     # Restart a run
     # https://fleuret.org/dlc/materials/dlc-handout-11-4-persistence.pdf
     nb_epochs_finished = 0
     try:
         # Load model state dict from checkpoint:
-        chkpt = torch.load(chkpt_path)
+        chkpt = torch.load(chkpt_path, map_location=device)
         model.load_state_dict(chkpt["model_state_dict"])
         optimizer.load_state_dict(chkpt["optimizer_state_dict"])
         nb_epochs_finished = chkpt["nb_epochs_finished"]
@@ -78,10 +84,12 @@ def trainer(cfg: DictConfig):
                     "optimizer_state_dict": optimizer.state_dict(),
                     "acc_losses": acc_losses},
                     chkpt_path)
+        
         if cfg.wandb.mode == "online":
             wandb.log({"epoch": e,
                        "acc_loss": acc_loss,
                        "samples": wandb.Image(str(save_path))})
+            copy_chkpt(run, begin_date, chkpt_path)
         
     
     if cfg.wandb.mode == "online":

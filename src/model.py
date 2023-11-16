@@ -87,8 +87,10 @@ class CondResidualBlock(nn.Module):
                 x: torch.Tensor,
                 cond: torch.Tensor) -> torch.Tensor:
         nb_channels = x.shape[1]
-        # N x C x 1 x 1 because different noises
+        # N x C' x 1 x 1 because different noises
         shape = (x.shape[0], 2*nb_channels, 1, 1)
+        # Predict BN parameters using MLPs taking as input the noise embedding
+        # N x C x 1 x 1 each
         gamma1, beta1 = self.bn_params1(cond).view(*shape).split(nb_channels, dim=1)
         gamma2, beta2 = self.bn_params2(cond).view(*shape).split(nb_channels, dim=1)
 
