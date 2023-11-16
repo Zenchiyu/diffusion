@@ -1,0 +1,32 @@
+wandb:
+  project: diffusion
+  mode: online
+
+wandb_watch: True  # log more info
+
+common:
+  nb_epochs: 200
+  sampling:
+    num_steps: 50  # 100
+    save_path: ./src/images/samples.png  # relative to cwd
+  training:
+    chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
+
+dataset:
+  name: CIFAR10
+  root_dir: ./data  # relative to cwd
+  batch_size: 32
+  num_workers: 0
+
+diffusion:
+  sigma_min: 2e-3
+  sigma_max: 80
+
+model:
+  nb_channels: 64  # resnet channels
+  num_blocks: 10  #25    # resnet blocks
+  cond_channels: 8
+  use_cond: False  # True -> use conditional batch norm given noise
+
+optim:  # Adam optimizer
+  lr: 1e-4
