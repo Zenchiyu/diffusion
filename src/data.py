@@ -66,7 +66,7 @@ def make_dataloaders(
         pin_memory: bool = False    
     ) -> DataLoaders:
     
-    collate_fn = default_collate if num_classes is not None else lambda batch: (default_collate(batch)[0], None)
+    collate_fn = default_collate if num_classes is not None else lambda batch: (default_collate(batch)[0], None)  # a way to add None y-label
     kwargs = {'collate_fn': collate_fn, 'num_workers': num_workers, 'persistent_workers': (num_workers > 0), 'pin_memory': pin_memory}
     
     return DataLoaders(

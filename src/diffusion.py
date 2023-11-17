@@ -20,8 +20,7 @@ class Diffusion:
         self.cnoise = lambda sigma: (torch.log(sigma)/4).view(-1)  # 1-D
 
     @staticmethod
-    def add_noise(x: torch.FloatTensor,
-                  noise_level: torch.FloatTensor) -> torch.FloatTensor:
+    def add_noise(x: torch.FloatTensor, noise_level: torch.FloatTensor) -> torch.FloatTensor:
         # Noising procedure using re-param trick
         return x + noise_level*torch.randn(size=x.shape, device=x.device)
     
