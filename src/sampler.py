@@ -40,6 +40,8 @@ def euler_method_conditional(
         label: Optional[int]=None,
         cfg_scale: float=0
     ) -> tuple[torch.Tensor, ...]:
+    
+    label = torch.tensor(label, device=X_noisy.device).expand(X_noisy.shape[0])
 
     # Track the iterative procedure
     X_inter = torch.zeros(size=(len(sigmas)+1, ) + X_noisy.shape)
@@ -82,7 +84,7 @@ def sample(
     with torch.no_grad():
         sigmas = diffusion.build_sigma_schedule(steps=num_steps, rho=7)  # Sequence of decreasing sigmas
         cin, cout, cskip, cnoise = diffusion.cin, diffusion.cout, diffusion.cskip, diffusion.cnoise
-        clabel = lambda label: label/num_classes - 0.5 if (label and num_classes) else None # XXX: Karras paper seem to have used
+        clabel = lambda label: label/num_classes - 0.5 if (label is not None and num_classes is not None) else None # XXX: Karras paper seem to have used
         # one-hot encoded vectors divided by sqrt(num_classes) before MLP embedding?
         
         # Denoiser

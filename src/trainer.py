@@ -36,6 +36,7 @@ def trainer(cfg: DictConfig):
         acc_loss = 0
         for X, y in dl.train:
             X = X.to(device=device)  # N x C x H x W
+            y = y.to(device=device)
 
             noise_level = diffusion.sample_sigma(X.shape[0])
             cin = diffusion.cin(noise_level)
@@ -46,7 +47,7 @@ def trainer(cfg: DictConfig):
             X_noisy = diffusion.add_noise(X, noise_level.view(-1, 1, 1, 1))
 
             # XXX: Classifier-Free Guidance
-            if torch.rand() < cfg.common.training.p_uncond:
+            if torch.rand(1) < cfg.common.training.p_uncond:
                 clabel = None
             else:
                 clabel = y/info.num_classes-0.5  # [-0.5, 0.5] more or less                
