@@ -2,43 +2,54 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from typing import Optional
 
 
-class Model(nn.Module):
-    def __init__(
-        self,
-        image_channels: int,
-        nb_channels: int,
-        num_blocks: int,
-        cond_channels: int,
-        use_cond: bool=False,
-    ) -> None:
+class ResNet(nn.Module):
+    def __init__(self,
+                 image_channels: int,
+                 nb_channels: int,
+                 num_blocks: int,
+                 cond_channels: int,
+                 use_cond: bool=False) -> None:
         super().__init__()
-        self.noise_emb = NoiseEmbedding(cond_channels)
-        self.conv_in = nn.Conv2d(image_channels, nb_channels, kernel_size=3, padding=1)
-        if use_cond:
-            self.blocks = nn.ModuleList([CondResidualBlock(nb_channels, cond_channels) for _ in range(num_blocks)])
-        else:
-            self.blocks = nn.ModuleList([ResidualBlock(nb_channels) for _ in range(num_blocks)])
-        self.conv_out = nn.Conv2d(nb_channels, image_channels, kernel_size=3, padding=1)
         self.use_cond = use_cond
+        self.noise_emb = NoiseEmbedding(cond_channels)
+        # self.label_emb = LabelEmbedding(cond_channels)
 
-    def forward(self, noisy_input: torch.Tensor, c_noise: torch.Tensor) -> torch.Tensor:
+        self.conv_in = nn.Conv2d(image_channels, nb_channels, kernel_size=3, padding=1)
+
+        self.blocks  = nn.ModuleList([ResidualBlock(nb_channels) if not(use_cond) else
+                                     CondResidualBlock(nb_channels, cond_channels)
+                                     for _ in range(num_blocks)])
+        
+        self.conv_out = nn.Conv2d(nb_channels, image_channels, kernel_size=3, padding=1)
+        
+    def forward(self,
+                noisy_input: torch.Tensor,
+                c_noise: torch.Tensor,
+                c_label: Optional[torch.Tensor]=None) -> torch.Tensor:
+        """
+        Apply ResNet on noisy input
+
+        Compared to the embryo at: https://fleuret.org/dlc/src/dlc_practical_6_embryo.py
+        where we have:
+        Conv->BN->ReLU->manytimes([Conv->BN->ReLU->Conv->BN]->ReLU)->AvgPool->FC
+
+        This network has:
+        Conv->manytimes([BN->ReLU->Conv->BN->ReLU->Conv])->Conv
+        where [.] indicates a residual connection
+        """
+        ## Conditioning
         cond = self.noise_emb(c_noise)
-        # Apply ResNet on noisy input
-        # Compared to the embryo at: https://fleuret.org/dlc/src/dlc_practical_6_embryo.py
-        # where we have:
-        # Conv->BN->ReLU->manytimes([Conv->BN->ReLU->Conv->BN]->ReLU)->AvgPool->FC
-        # This network has:
-        # Conv->manytimes([BN->ReLU->Conv->BN->ReLU->Conv])->Conv
-        # where [.] indicates a residual connection
+        # Classifier-Free Guidance
+        cond += self.label_emb(c_label) if c_label is not None else 0
+        kwargs = {"cond": cond} if self.use_cond else {}
+        
+        ## Forward w/ or w/o conditioning
         x = self.conv_in(noisy_input)
-        if self.use_cond:
-            for block in self.blocks:
-                x = block(x, cond)
-        else:
-            for block in self.blocks:
-                x = block(x)
+        for block in self.blocks:
+            x = block(x, **kwargs)
         return self.conv_out(x)
 
 
@@ -55,6 +66,18 @@ class NoiseEmbedding(nn.Module):
         # Output is of shape input.shape[0] x cond_channels where
         # first half of the columns use cos and the other half use sin.
         return torch.cat([f.cos(), f.sin()], dim=-1)  # concat along last dim
+    
+class LabelEmbedding(nn.Module):
+    # XXX: Same as NoiseEmbedding for the moment
+    def __init__(self, cond_channels: int) -> None:
+        super().__init__()
+        assert cond_channels % 2 == 0
+        self.register_buffer('weight', torch.randn(1, cond_channels // 2))
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        assert input.ndim == 1
+        f = 2 * torch.pi * input.unsqueeze(1) @ self.weight
+        return torch.cat([f.cos(), f.sin()], dim=-1)
 
 class ResidualBlock(nn.Module):
     def __init__(self, nb_channels: int) -> None:
@@ -95,8 +118,8 @@ class CondResidualBlock(nn.Module):
         gamma2, beta2 = self.bn_params2(cond).view(*shape).split(nb_channels, dim=1)
 
         # BN -> ReLU -> Conv instead of Conv -> BN -> ReLU
-        bn1 = gamma1*self.norm1(x) + beta1
+        bn1 = torch.addcmul(beta1, gamma1, self.norm1(x))
         y = self.conv1(F.relu(bn1))
-        bn2 = gamma2*self.norm2(y) + beta2
+        bn2 = torch.addcmul(beta2, gamma2, self.norm2(y))
         y = self.conv2(F.relu(bn2))
         return x + y  # residual connection

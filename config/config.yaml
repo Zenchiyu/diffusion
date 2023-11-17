@@ -10,6 +10,7 @@ common:
     num_steps: 50  # 100
     save_path: ./src/images/samples.png  # relative to cwd
   training:
+    p_uncond: 1
     chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
 
 dataset:
