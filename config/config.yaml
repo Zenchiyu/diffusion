@@ -7,10 +7,12 @@ wandb_watch: True  # log more info
 common:
   nb_epochs: 200
   sampling:
-    num_steps: 50  # 100
+    num_steps: 50   # 100
+    label: null     # class label for Classifier-Free Guidance :p
+    cfg_scale: 0    # = 0 for uncond., > 0 for Classifier-Free Guidance :p
     save_path: ./src/images/samples.png  # relative to cwd
   training:
-    p_uncond: 1
+    p_uncond: 1  # used in Classifier-Free Guidance
     chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
 
 dataset:

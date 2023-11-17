@@ -43,7 +43,7 @@ class ResNet(nn.Module):
         ## Conditioning
         cond = self.noise_emb(c_noise)
         # Classifier-Free Guidance
-        cond += self.label_emb(c_label) if c_label is not None else 0  # The Karras et al. paper also adds embeddings (see p. 46)
+        cond += self.label_emb(c_label) if c_label else 0  # The Karras et al. paper also adds embeddings (see p. 46)
         kwargs = {"cond": cond} if self.use_cond else {}
         
         ## Forward w/ or w/o conditioning

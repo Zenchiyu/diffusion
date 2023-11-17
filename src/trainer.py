@@ -5,45 +5,30 @@ import torch
 import wandb
 
 from init import init
-from sampler import sample, save
-from utils import copy_config, copy_chkpt
+from sampler import sample
+from utils import copy_config, copy_chkpt, save
 
-from datetime import date
 from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
 
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def trainer(cfg: DictConfig):
-    print("Config:")
-    print(OmegaConf.to_yaml(cfg))
+    # Initialization
+    init_tuple = init(cfg)
+    model, optimizer, criterion, diffusion = init_tuple.model, init_tuple.optimizer, init_tuple.criterion, init_tuple.diffusion
+    dl, info, device = init_tuple.dl, init_tuple.info, init_tuple.device,
+    save_path, chkpt_path = init_tuple.save_path, init_tuple.chkpt_path
+    nb_epochs_finished = init_tuple.nb_epochs_finished
     
-    # TODO: work with same dataset if continue a run!
-    model, optimizer, criterion, diffusion, dl, info, device, save_path, chkpt_path = init(cfg)
-    print(f"\n\nDataset: {cfg.dataset.name}, Using device: {device}")
-    
-    begin_date = str(date.today())
+    begin_date = init_tuple.begin_date
+    seed = torch.random.initial_seed()  # retrieve current seed
 
     if cfg.wandb.mode == "online":
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
                          **cfg.wandb)
-        run.watch(model, criterion,
-                           log="all", log_graph=True)
-        
+        run.watch(model, criterion, log="all", log_graph=True)
         copy_config(run, begin_date=begin_date)
-        
-    # Restart a run
-    # https://fleuret.org/dlc/materials/dlc-handout-11-4-persistence.pdf
-    nb_epochs_finished = 0
-    try:
-        # Load model state dict from checkpoint:
-        chkpt = torch.load(chkpt_path, map_location=device)
-        model.load_state_dict(chkpt["model_state_dict"])
-        optimizer.load_state_dict(chkpt["optimizer_state_dict"])
-        nb_epochs_finished = chkpt["nb_epochs_finished"]
-        print(f"\nStarting from checkpoint with {nb_epochs_finished} finished epochs.")
-    except FileNotFoundError:
-        print("Starting from scratch.")
 
     # Training
     acc_losses = []
@@ -59,7 +44,14 @@ def trainer(cfg: DictConfig):
             cnoise = diffusion.cnoise(noise_level)
             
             X_noisy = diffusion.add_noise(X, noise_level.view(-1, 1, 1, 1))
-            output = model(cin*X_noisy, cnoise)
+
+            # XXX: Classifier-Free Guidance
+            if torch.rand() < cfg.common.training.p_uncond:
+                clabel = None
+            else:
+                clabel = y/info.num_classes-0.5  # [-0.5, 0.5] more or less                
+
+            output = model(cin*X_noisy, cnoise, clabel)
             target = (X-cskip*X_noisy)/cout
 
             loss = criterion(output, target)  # MSE
@@ -82,7 +74,9 @@ def trainer(cfg: DictConfig):
         torch.save({"nb_epochs_finished": e+1,
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
-                    "acc_losses": acc_losses},
+                    "acc_losses": acc_losses,
+                    "seed": seed,
+                    "begin_date": begin_date},
                     chkpt_path)
         
         if cfg.wandb.mode == "online":
