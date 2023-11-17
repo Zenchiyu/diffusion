@@ -15,7 +15,7 @@ class ResNet(nn.Module):
         super().__init__()
         self.use_cond = use_cond
         self.noise_emb = NoiseEmbedding(cond_channels)
-        # self.label_emb = LabelEmbedding(cond_channels)
+        # self.label_emb = LabelEmbedding(cond_channels)  # to put this in comment if try to load old model
 
         self.conv_in = nn.Conv2d(image_channels, nb_channels, kernel_size=3, padding=1)
 
@@ -43,7 +43,7 @@ class ResNet(nn.Module):
         ## Conditioning
         cond = self.noise_emb(c_noise)
         # Classifier-Free Guidance
-        cond += self.label_emb(c_label) if c_label is not None else 0
+        cond += self.label_emb(c_label) if c_label is not None else 0  # The Karras et al. paper also adds embeddings (see p. 46)
         kwargs = {"cond": cond} if self.use_cond else {}
         
         ## Forward w/ or w/o conditioning
@@ -69,6 +69,7 @@ class NoiseEmbedding(nn.Module):
     
 class LabelEmbedding(nn.Module):
     # XXX: Same as NoiseEmbedding for the moment
+    # The Karras et al. paper seemed to have used a MLP instead (see p. 46-47)
     def __init__(self, cond_channels: int) -> None:
         super().__init__()
         assert cond_channels % 2 == 0
