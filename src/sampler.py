@@ -14,8 +14,11 @@ from typing import Optional, Callable
 def euler_method(
         sigmas: torch.Tensor,
         X_noisy: torch.Tensor,
-        D: Callable[[torch.Tensor, torch.Tensor, Optional[int]], torch.Tensor]
+        D: Callable[[torch.Tensor, torch.Tensor, Optional[int]], torch.Tensor],
+        uncond_label: Optional[int]=None,
     ) -> tuple[torch.Tensor, ...]:
+
+    uncond_label = None if uncond_label is None else torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
 
     # Track the iterative procedure
     X_inter = torch.zeros(size=(len(sigmas)+1, ) + X_noisy.shape)
@@ -23,7 +26,7 @@ def euler_method(
     
     for i, sigma in enumerate(sigmas):
         s = sigma.expand(X_noisy.shape[0])
-        X_denoised_uncond = D(X_noisy, s, None)  # based on our model, try to denoise X_noisy
+        X_denoised_uncond = D(X_noisy, s, uncond_label)  # based on our model, try to denoise X_noisy
         
         sigma_next = sigmas[i + 1] if i < len(sigmas) - 1 else 0
         d = (X_noisy - X_denoised_uncond) / sigma     # derivative
@@ -37,7 +40,8 @@ def euler_method_conditional(
         sigmas: torch.Tensor,
         X_noisy: torch.Tensor,
         D: Callable[[torch.Tensor, torch.Tensor, Optional[int]], torch.Tensor],
-        label: Optional[int]=None,
+        label: int,
+        uncond_label: Optional[int]=None,
         cfg_scale: float=0
     ) -> tuple[torch.Tensor, ...]:
     
@@ -49,7 +53,7 @@ def euler_method_conditional(
     
     for i, sigma in enumerate(sigmas):
         s = sigma.expand(X_noisy.shape[0])
-        X_denoised_uncond = D(X_noisy, s, None)  # based on our model, try to denoise X_noisy
+        X_denoised_uncond = D(X_noisy, s, uncond_label)  # based on our model, try to denoise X_noisy
         X_denoised_cond   = D(X_noisy, s, label)
 
         sigma_next = sigmas[i + 1] if i < len(sigmas) - 1 else 0
@@ -74,6 +78,7 @@ def sample(
         diffusion: Diffusion,
         num_steps: int=50,
         label: Optional[int]=None,
+        uncond_label: Optional[int]=None,
         num_classes: Optional[int]=None,
         cfg_scale: float=0,
         track_inter: bool=False
@@ -98,9 +103,9 @@ def sample(
         
         # TODO: make this cleaner
         if not(label and num_classes):
-            X_noisy, X_inter = euler_method(sigmas, X_noisy, D)
+            X_noisy, X_inter = euler_method(sigmas, X_noisy, D, uncond_label)
         else:
-            X_noisy, X_inter = euler_method_conditional(sigmas, X_noisy, D, label, cfg_scale)
+            X_noisy, X_inter = euler_method_conditional(sigmas, X_noisy, D, label, uncond_label, cfg_scale)
         
     model.train()
 
@@ -120,6 +125,7 @@ def sampler(cfg: DictConfig):
     samples, samples_inter = sample(N, C, H, model, diffusion,
                                     num_steps=cfg.common.sampling.num_steps,
                                     label=cfg.common.sampling.label,
+                                    uncond_label=cfg.common.uncond_label,
                                     num_classes=info.num_classes,
                                     cfg_scale=cfg.common.sampling.cfg_scale,
                                     track_inter=True)
