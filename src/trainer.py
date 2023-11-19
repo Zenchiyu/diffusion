@@ -47,11 +47,18 @@ def trainer(cfg: DictConfig):
             X_noisy = diffusion.add_noise(X, noise_level.view(-1, 1, 1, 1))
 
             # XXX: Classifier-Free Guidance
-            if torch.rand(1) < cfg.common.training.p_uncond:
-                clabel = None
-            else:
-                clabel = y/info.num_classes-0.5  # [-0.5, 0.5] more or less                
+            # if torch.rand(1) < cfg.common.training.p_uncond:
+            #     clabel = None
+            # else:
+            #     clabel = y/info.num_classes-0.5  # [-0.5, 0.5] more or less
+            if torch.rand(1) < 0.8:  # cfg.common.training.p_uncond:
+                if cfg.common.uncond_label is not None:
+                    y[:] = cfg.common.uncond_label
+                else:
+                    y = None
 
+            clabel = y/info.num_classes-0.5 if (y is not None and info.num_classes is not None) else None  # [-0.5, 0.5] more or less
+            
             output = model(cin*X_noisy, cnoise, clabel)
             target = (X-cskip*X_noisy)/cout
 
@@ -64,12 +71,15 @@ def trainer(cfg: DictConfig):
             acc_loss += loss.item()
 
         acc_losses.append(acc_loss)
-        samples = sample(8,
-                         info.image_channels,
-                         info.image_size,
-                         model,
-                         diffusion,
-                         cfg.common.sampling.num_steps)  # it's switching between eval and train modes
+        # Unconditional generation (label is None)
+        samples = sample(num_samples=8,
+                         image_channels=info.image_channels,
+                         image_size=info.image_size,
+                         model=model,
+                         diffusion=diffusion,
+                         num_steps=cfg.common.sampling.num_steps,
+                         uncond_label=cfg.common.uncond_label,
+                         num_classes=info.num_classes)  # it's switching between eval and train modes
         save(samples, str(save_path))
         # Save checkpoint
         torch.save({"nb_epochs_finished": e+1,

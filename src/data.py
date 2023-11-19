@@ -1,4 +1,4 @@
-# Initial template made by Eloi Alonso
+# Adapted from template made by Eloi Alonso
 from collections import namedtuple
 from typing import Optional, Tuple
 
