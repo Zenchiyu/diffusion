@@ -46,6 +46,7 @@ def euler_method_conditional(
     ) -> tuple[torch.Tensor, ...]:
     
     label = torch.tensor(label, device=X_noisy.device).expand(X_noisy.shape[0])
+    uncond_label = None if uncond_label is None else torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
 
     # Track the iterative procedure
     X_inter = torch.zeros(size=(len(sigmas)+1, ) + X_noisy.shape)
@@ -89,7 +90,7 @@ def sample(
     with torch.no_grad():
         sigmas = diffusion.build_sigma_schedule(steps=num_steps, rho=7)  # Sequence of decreasing sigmas
         cin, cout, cskip, cnoise = diffusion.cin, diffusion.cout, diffusion.cskip, diffusion.cnoise
-        clabel = lambda label: label/num_classes - 0.5 if (label is not None and num_classes is not None) else None # XXX: Karras paper seem to have used
+        clabel = lambda y: y/num_classes - 0.5 if (y is not None and num_classes is not None) else None # XXX: Karras paper seem to have used
         # one-hot encoded vectors divided by sqrt(num_classes) before MLP embedding?
         
         # Denoiser
@@ -101,8 +102,7 @@ def sample(
                             image_size, image_size,
                             device=diffusion.device) * sigmas[0]
         
-        # TODO: make this cleaner
-        if not(label and num_classes):
+        if (label is None) or (num_classes is None):
             X_noisy, X_inter = euler_method(sigmas, X_noisy, D, uncond_label)
         else:
             X_noisy, X_inter = euler_method_conditional(sigmas, X_noisy, D, label, uncond_label, cfg_scale)
@@ -117,7 +117,7 @@ def sample(
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
     # Initialization
-    init_tuple = init(cfg)
+    init_tuple = init(cfg, chkpt_seed=False)  # Don't use the checkpoint seed
     model, diffusion, info = init_tuple.model, init_tuple.diffusion, init_tuple.info
 
     # Sample and display

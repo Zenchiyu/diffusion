@@ -28,7 +28,9 @@ def create_save_directories(cfg: DictConfig) -> tuple[Path, Path]:
     chkpt_path.parent.mkdir(parents=True, exist_ok=True)
     return save_path, chkpt_path
 
-def load_chkpt(chkpt_path: Path, device: str|torch.device) -> tuple[Any, int, str]:
+def load_chkpt(chkpt_path: Path,
+               chkpt_seed: bool=True,
+               device: str|torch.device="cuda" if torch.cuda.is_available() else "cpu") -> tuple[Any, int, str]:
     """
     Load checkpoint if exists, set random seed, and handle run resuming.
     
@@ -42,16 +44,19 @@ def load_chkpt(chkpt_path: Path, device: str|torch.device) -> tuple[Any, int, st
         chkpt = torch.load(chkpt_path, map_location=device)
         nb_epochs_finished = chkpt.get("nb_epochs_finished", nb_epochs_finished)
         begin_date = chkpt.get("begin_date", begin_date)
-        seed = chkpt.get("seed", seed)
-        torch.manual_seed(seed)
+        if chkpt_seed:
+            seed = chkpt.get("seed", seed)
+            torch.manual_seed(seed)
         print(f"\nStarting from checkpoint with {nb_epochs_finished} finished epochs"+\
-              f", and initial seed {seed} (=> same datasets).")
+              f", and initial seed {seed}.")
     except FileNotFoundError:
         print(f"Starting from scratch with random initial seed {seed}.")
 
     return chkpt, nb_epochs_finished, begin_date
 
-def init(cfg: DictConfig, verbose: bool=True) -> Init:
+def init(cfg: DictConfig,
+         chkpt_seed: bool=True,
+         verbose: bool=True) -> Init:
     if verbose:
         print("Config:")
         print(OmegaConf.to_yaml(cfg))
@@ -63,7 +68,7 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
     save_path, chkpt_path = create_save_directories(cfg)
 
     ## Load checkpoint if exists
-    chkpt, nb_epochs_finished, begin_date = load_chkpt(chkpt_path, device)
+    chkpt, nb_epochs_finished, begin_date = load_chkpt(chkpt_path, chkpt_seed, device)
 
     ## DataLoaders
     dl, info = load_dataset_and_make_dataloaders(
