@@ -117,8 +117,11 @@ def sample(
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
     # Initialization
-    init_tuple = init(cfg, chkpt_seed=False)  # Don't use the checkpoint seed
+    init_tuple = init(cfg)
     model, diffusion, info = init_tuple.model, init_tuple.diffusion, init_tuple.info
+
+    # Don't use the checkpoint seed for sampling
+    torch.seed()
 
     # Sample and display
     N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
