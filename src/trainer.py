@@ -44,7 +44,7 @@ def trainer(cfg: DictConfig):
 
             # Classifier-Free Guidance
             if info.num_classes:
-                probs = torch.rand(X.shape[0])
+                probs = torch.rand(X.shape[0], device=device)
                 y.masked_fill_(probs < cfg.common.training.p_uncond, info.num_classes)
             
             output = model(cin*X_noisy, cnoise, y)
