@@ -1,5 +1,3 @@
-# Made by Stephane Nguyen following
-# notebooks/instructions.ipynb
 import hydra
 import torch
 
@@ -14,11 +12,11 @@ from typing import Optional, Callable
 def euler_method(
         sigmas: torch.Tensor,
         X_noisy: torch.Tensor,
-        D: Callable[[torch.Tensor, torch.Tensor, Optional[int]], torch.Tensor],
-        uncond_label: Optional[int]=None,
+        D: Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor],
+        uncond_label: int,
     ) -> tuple[torch.Tensor, ...]:
 
-    uncond_label = None if uncond_label is None else torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
+    uncond_label = torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
 
     # Track the iterative procedure
     X_inter = torch.zeros(size=(len(sigmas)+1, ) + X_noisy.shape)
@@ -39,14 +37,14 @@ def euler_method(
 def euler_method_conditional(
         sigmas: torch.Tensor,
         X_noisy: torch.Tensor,
-        D: Callable[[torch.Tensor, torch.Tensor, Optional[int]], torch.Tensor],
+        D: Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor],
         label: int,
-        uncond_label: Optional[int]=None,
+        uncond_label: int,
         cfg_scale: float=0
     ) -> tuple[torch.Tensor, ...]:
     
     label = torch.tensor(label, device=X_noisy.device).expand(X_noisy.shape[0])
-    uncond_label = None if uncond_label is None else torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
+    uncond_label = torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
 
     # Track the iterative procedure
     X_inter = torch.zeros(size=(len(sigmas)+1, ) + X_noisy.shape)
@@ -54,6 +52,7 @@ def euler_method_conditional(
     
     for i, sigma in enumerate(sigmas):
         s = sigma.expand(X_noisy.shape[0])
+        # TODO: concat
         X_denoised_uncond = D(X_noisy, s, uncond_label)  # based on our model, try to denoise X_noisy
         X_denoised_cond   = D(X_noisy, s, label)
 
@@ -77,24 +76,20 @@ def sample(
         image_size: int,
         model: torch.nn.Module,
         diffusion: Diffusion,
-        num_steps: int=50,
+        uncond_label: int,
         label: Optional[int]=None,
-        uncond_label: Optional[int]=None,
-        num_classes: Optional[int]=None,
         cfg_scale: float=0,
+        num_steps: int=50,
         track_inter: bool=False
     ) -> torch.Tensor:
-    # XXX: If want to apply CFG, need to specify both label and num_classes
-    # XXX: and CFG scale
+
     model.eval()
     with torch.no_grad():
         sigmas = diffusion.build_sigma_schedule(steps=num_steps, rho=7)  # Sequence of decreasing sigmas
         cin, cout, cskip, cnoise = diffusion.cin, diffusion.cout, diffusion.cskip, diffusion.cnoise
-        clabel = lambda y: y/num_classes - 0.5 if (y is not None and num_classes is not None) else None # XXX: Karras paper seem to have used
-        # one-hot encoded vectors divided by sqrt(num_classes) before MLP embedding?
         
         # Denoiser
-        D = lambda X_noisy, sigma, label: cskip(sigma)*X_noisy+cout(sigma)*model(cin(sigma)*X_noisy, cnoise(sigma), clabel(label))
+        D = lambda X_noisy, sigma, label: cskip(sigma)*X_noisy+cout(sigma)*model(cin(sigma)*X_noisy, cnoise(sigma), label)
 
         # Initialize with pure gaussian noise ~ N(0, sigmas[0])
         # Initial condition of the differential equation
@@ -102,7 +97,7 @@ def sample(
                             image_size, image_size,
                             device=diffusion.device) * sigmas[0]
         
-        if (label is None) or (num_classes is None):
+        if label is None:
             X_noisy, X_inter = euler_method(sigmas, X_noisy, D, uncond_label)
         else:
             X_noisy, X_inter = euler_method_conditional(sigmas, X_noisy, D, label, uncond_label, cfg_scale)
@@ -125,13 +120,15 @@ def sampler(cfg: DictConfig):
 
     # Sample and display
     N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
-    samples, samples_inter = sample(N, C, H, model, diffusion,
-                                    num_steps=cfg.common.sampling.num_steps,
-                                    label=cfg.common.sampling.label,
-                                    uncond_label=cfg.common.uncond_label,
-                                    num_classes=info.num_classes,
-                                    cfg_scale=cfg.common.sampling.cfg_scale,
-                                    track_inter=True)
+    samples, samples_inter = sample(
+            N, C, H, model, diffusion,
+            uncond_label=info.num_classes if info.num_classes is not None else None,
+            label=cfg.common.sampling.label,
+            cfg_scale=cfg.common.sampling.cfg_scale,
+            num_steps=cfg.common.sampling.num_steps,
+            track_inter=True
+        )
+
     display(samples)
     # Display intermediate generation steps 
     # for the first generated picture

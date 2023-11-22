@@ -6,7 +6,6 @@ wandb_watch: True  # log more info
 
 common:
   nb_epochs: 200
-  uncond_label: 10  # fake class label/null token for CFG to specify uncond.
   sampling:
     num_steps: 50   # 100
     label: null     # class label for Classifier-Free Guidance (CFG)
@@ -30,7 +29,6 @@ model:
   nb_channels: 64  # resnet channels
   num_blocks: 10  #25    # resnet blocks
   cond_channels: 8
-  use_cond: True  # True -> use conditional batch norm given noise
 
 optim:  # Adam optimizer
   lr: 1e-4

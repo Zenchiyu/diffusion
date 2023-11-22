@@ -1,5 +1,3 @@
-# Made by Stephane Nguyen following
-# notebooks/instructions.ipynb
 import hydra
 import torch
 import wandb
@@ -16,12 +14,10 @@ from omegaconf import DictConfig, OmegaConf
 def trainer(cfg: DictConfig):
     # Initialization
     init_tuple = init(cfg)
-    model, optimizer, criterion, diffusion = init_tuple.model, init_tuple.optimizer, init_tuple.criterion, init_tuple.diffusion
-    dl, info, device = init_tuple.dl, init_tuple.info, init_tuple.device,
-    save_path, chkpt_path = init_tuple.save_path, init_tuple.chkpt_path
-    nb_epochs_finished = init_tuple.nb_epochs_finished
-    
-    begin_date = init_tuple.begin_date
+    (model, optimizer, criterion, diffusion,
+     dl, info, device, nb_epochs_finished,
+     begin_date, save_path, chkpt_path) = init_tuple
+
     seed = torch.random.initial_seed()  # retrieve current seed
 
     if cfg.wandb.mode == "online":
@@ -46,20 +42,12 @@ def trainer(cfg: DictConfig):
             
             X_noisy = diffusion.add_noise(X, noise_level.view(-1, 1, 1, 1))
 
-            # XXX: Classifier-Free Guidance
-            # if torch.rand(1) < cfg.common.training.p_uncond:
-            #     clabel = None
-            # else:
-            #     clabel = y/info.num_classes-0.5  # [-0.5, 0.5] more or less
-            if torch.rand(1) < 0.8:  # cfg.common.training.p_uncond:
-                if cfg.common.uncond_label is not None:
-                    y[:] = cfg.common.uncond_label
-                else:
-                    y = None
-
-            clabel = y/info.num_classes-0.5 if (y is not None and info.num_classes is not None) else None  # [-0.5, 0.5] more or less
+            # Classifier-Free Guidance
+            if info.num_classes:
+                probs = torch.rand(X.shape[0])
+                y.masked_fill_(probs < cfg.common.training.p_uncond, info.num_classes)
             
-            output = model(cin*X_noisy, cnoise, clabel)
+            output = model(cin*X_noisy, cnoise, y)
             target = (X-cskip*X_noisy)/cout
 
             loss = criterion(output, target)  # MSE
@@ -77,9 +65,8 @@ def trainer(cfg: DictConfig):
                          image_size=info.image_size,
                          model=model,
                          diffusion=diffusion,
-                         num_steps=cfg.common.sampling.num_steps,
-                         uncond_label=cfg.common.uncond_label,
-                         num_classes=info.num_classes)  # it's switching between eval and train modes
+                         uncond_label=info.num_classes if info.num_classes is not None else None,
+                         num_steps=cfg.common.sampling.num_steps)  # it's switching between eval and train modes
         save(samples, str(save_path))
         # Save checkpoint
         torch.save({"nb_epochs_finished": e+1,
@@ -95,7 +82,6 @@ def trainer(cfg: DictConfig):
                        "acc_loss": acc_loss,
                        "samples": wandb.Image(str(save_path))})
             copy_chkpt(run, begin_date, chkpt_path)
-        
     
     if cfg.wandb.mode == "online":
         wandb.finish()

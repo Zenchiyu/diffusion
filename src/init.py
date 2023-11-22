@@ -1,12 +1,10 @@
-# Made by Stephane Nguyen following
-# notebooks/instructions.ipynb
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
 from models import ResNet
 from diffusion import Diffusion
-from data import load_dataset_and_make_dataloaders  # Made by Eloi
+from data import load_dataset_and_make_dataloaders
 
 from collections import namedtuple
 from datetime import date
@@ -85,7 +83,7 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
         nb_channels=cfg.model.nb_channels,      # nb channels in ResNet, e.g. 64
         num_blocks=cfg.model.num_blocks,        # nb of resblocks, e.g. 10
         cond_channels=cfg.model.cond_channels,  # cond. embed dim, e.g. 8
-        use_cond=cfg.model.use_cond             # whether ignores cond.
+        num_classes=info.num_classes            # will +1 fake label for CFG
     )
     criterion = nn.MSELoss()
     model.to(device=device)

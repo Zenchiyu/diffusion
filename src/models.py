@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 from typing import Optional
-from blocks import NoiseEmbedding, LabelEmbedding, ResidualBlock, CondResidualBlock
+from blocks import NoiseEmbedding, LabelEmbedding, CondResidualBlock
 
 
 class ResNet(nn.Module):
@@ -11,18 +11,14 @@ class ResNet(nn.Module):
                  nb_channels: int,
                  num_blocks: int,
                  cond_channels: int,
-                 use_cond: bool=False) -> None:
+                 num_classes: Optional[int]=None) -> None:
         super().__init__()
-        self.use_cond = use_cond
+        self.num_classes = num_classes
         self.noise_emb = NoiseEmbedding(cond_channels)
-        self.label_emb = LabelEmbedding(cond_channels)  # TODO: to put this in comment if try to load old model
+        if self.num_classes: self.label_emb = LabelEmbedding(num_classes+1, cond_channels)  # incl. fake label to represent uncond.
 
         self.conv_in = nn.Conv2d(image_channels, nb_channels, kernel_size=3, padding=1)
-
-        self.blocks  = nn.ModuleList([ResidualBlock(nb_channels) if not(use_cond) else
-                                     CondResidualBlock(nb_channels, cond_channels)
-                                     for _ in range(num_blocks)])
-        
+        self.blocks  = nn.ModuleList([CondResidualBlock(nb_channels, cond_channels) for _ in range(num_blocks)])
         self.conv_out = nn.Conv2d(nb_channels, image_channels, kernel_size=3, padding=1)
         
     def forward(self,
@@ -43,11 +39,10 @@ class ResNet(nn.Module):
         ## Conditioning
         cond = self.noise_emb(c_noise)
         # Classifier-Free Guidance
-        cond += self.label_emb(c_label) if c_label is not None else 0  # The Karras et al. paper also adds embeddings (see p. 46)
-        kwargs = {"cond": cond} if self.use_cond else {}
+        cond += self.label_emb(c_label) if (c_label is not None and self.num_classes is not None) else 0
         
-        ## Forward w/ or w/o conditioning
+        ## Forward w/ conditioning
         x = self.conv_in(noisy_input)
         for block in self.blocks:
-            x = block(x, **kwargs)
+            x = block(x, cond)
         return self.conv_out(x)
