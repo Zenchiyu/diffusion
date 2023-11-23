@@ -122,7 +122,7 @@ def sampler(cfg: DictConfig):
     N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
     samples, samples_inter = sample(
             N, C, H, model, diffusion,
-            uncond_label=info.num_classes if info.num_classes is not None else None,
+            uncond_label=info.num_classes,
             label=cfg.common.sampling.label,
             cfg_scale=cfg.common.sampling.cfg_scale,
             num_steps=cfg.common.sampling.num_steps,

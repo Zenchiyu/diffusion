@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from models import ResNet
+from models.resnet import ResNet
 from diffusion import Diffusion
 from data import load_dataset_and_make_dataloaders
 

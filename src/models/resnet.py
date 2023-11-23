@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 from typing import Optional
-from blocks import NoiseEmbedding, LabelEmbedding, CondResidualBlock
+from .blocks import NoiseEmbedding, LabelEmbedding, CondResidualBlock
 
 
 class ResNet(nn.Module):
