@@ -70,6 +70,7 @@ def euler_method_conditional(
         X_inter[i+1] = X_noisy
     return X_noisy, X_inter
 
+@torch.no_grad()
 def sample(
         num_samples: int,
         image_channels: int,
@@ -84,24 +85,22 @@ def sample(
     ) -> torch.Tensor:
 
     model.eval()
-    with torch.no_grad():
-        sigmas = diffusion.build_sigma_schedule(steps=num_steps, rho=7)  # Sequence of decreasing sigmas
-        cin, cout, cskip, cnoise = diffusion.cin, diffusion.cout, diffusion.cskip, diffusion.cnoise
-        
-        # Denoiser
-        D = lambda X_noisy, sigma, label: cskip(sigma)*X_noisy+cout(sigma)*model(cin(sigma)*X_noisy, cnoise(sigma), label)
+    sigmas = diffusion.build_sigma_schedule(steps=num_steps, rho=7)  # Sequence of decreasing sigmas
+    cin, cout, cskip, cnoise = diffusion.cin, diffusion.cout, diffusion.cskip, diffusion.cnoise
+    
+    # Denoiser
+    D = lambda X_noisy, sigma, label: cskip(sigma)*X_noisy+cout(sigma)*model(cin(sigma)*X_noisy, cnoise(sigma), label)
 
-        # Initialize with pure gaussian noise ~ N(0, sigmas[0])
-        # Initial condition of the differential equation
-        X_noisy = torch.randn(num_samples, image_channels,
-                            image_size, image_size,
-                            device=diffusion.device) * sigmas[0]
-        
-        if label is None:
-            X_noisy, X_inter = euler_method(sigmas, X_noisy, D, uncond_label)
-        else:
-            X_noisy, X_inter = euler_method_conditional(sigmas, X_noisy, D, label, uncond_label, cfg_scale)
-        
+    # Initialize with pure gaussian noise ~ N(0, sigmas[0])
+    # Initial condition of the differential equation
+    X_noisy = torch.randn(num_samples, image_channels,
+                        image_size, image_size,
+                        device=diffusion.device) * sigmas[0]
+    
+    if label is None:
+        X_noisy, X_inter = euler_method(sigmas, X_noisy, D, uncond_label)
+    else:
+        X_noisy, X_inter = euler_method_conditional(sigmas, X_noisy, D, label, uncond_label, cfg_scale)
     model.train()
 
     if track_inter:

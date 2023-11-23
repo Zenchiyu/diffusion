@@ -1,49 +1,52 @@
 import torch
 import torch.nn as nn
+from enum import Enum
 from typing import Optional
-from .blocks import NoiseEmbedding, LabelEmbedding, UpDownBlock
+from .blocks import NoiseEmbedding, LabelEmbedding, CondUpDownBlock
 
+
+State = Enum('State', ['UP', 'DOWN', 'NONE'])
 
 class UNet(nn.Module):
     def __init__(self,
                  image_channels: int,
                  in_channels: int,
                  mid_channels: int,
-                 num_blocks: int,
+                 nb_blocks: int,
                  cond_channels: int,
-                 num_classes: Optional[int]=None):
+                 nb_classes: Optional[int]=None):
         super().__init__()
-        self.num_classes = num_classes
+        self.nb_classes = nb_classes
         self.noise_emb = NoiseEmbedding(cond_channels)
-        if self.num_classes: self.label_emb = LabelEmbedding(num_classes+1, cond_channels)  # incl. fake label to represent uncond.
+        if self.nb_classes: self.label_emb = LabelEmbedding(nb_classes+1, cond_channels)  # incl. fake label to represent uncond.
 
         self.conv_in = nn.Conv2d(image_channels, in_channels, kernel_size=3, padding=1)
         down_blocks  = []
         up_blocks  = []
-        for i in range(num_blocks):
+        for i in range(nb_blocks//2):
             nic = in_channels if i == 0 else mid_channels*2**i
             mid = mid_channels if i == 0 else nic*2
 
-            down_blocks.append(UpDownBlock(in_channels=nic,
+            down_blocks.append(CondUpDownBlock(in_channels=nic,
                                                 mid_channels=mid,
                                                 out_channels=mid,
                                                 cond_channels=cond_channels,
-                                                down=True))
+                                                updown_state=State.DOWN))
         # Bridge
-        up_blocks.append(UpDownBlock(in_channels=mid,
+        up_blocks.append(CondUpDownBlock(in_channels=mid,
                                      mid_channels=mid*2,
                                      out_channels=mid*2,
                                      cond_channels=cond_channels,
-                                     down=False))
-        for i in range(num_blocks):
+                                     updown_state=State.UP))
+        for i in range(nb_blocks//2):
             nic = mid_channels if i == 0 else mid*2
             mid = in_channels if i == 0 else mid_channels*2**i
             
-            up_blocks.append(UpDownBlock(in_channels=nic,
+            up_blocks.append(CondUpDownBlock(in_channels=nic,
                                                 mid_channels=mid,
                                                 out_channels=mid,
                                                 cond_channels=cond_channels,
-                                                down=False))
+                                                updown_state=State.UP))
         self.down_blocks = nn.ModuleList(down_blocks)
         self.up_blocks = nn.ModuleList(reversed(up_blocks))
         self.conv_out = nn.Conv2d(in_channels, image_channels, kernel_size=3, padding=1)
@@ -55,7 +58,7 @@ class UNet(nn.Module):
         ## Conditioning
         cond = self.noise_emb(c_noise)
         # Classifier-Free Guidance
-        cond += self.label_emb(c_label) if (c_label is not None and self.num_classes is not None) else 0
+        cond += self.label_emb(c_label) if (c_label is not None and self.nb_classes is not None) else 0
         
         ## Forward w/ conditioning
         x = self.conv_in(noisy_input)

@@ -1,9 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from enum import Enum
 from typing import Optional, Callable
 
+
+State = Enum('State', ['UP', 'DOWN', 'NONE'])
 
 class NoiseEmbedding(nn.Module):
     def __init__(self, cond_channels: int) -> None:
@@ -13,22 +15,30 @@ class NoiseEmbedding(nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         assert input.ndim == 1
-        # Outer-product; input.shape[0] x cond_channels//2
-        f = 2 * torch.pi * input.unsqueeze(1) @ self.weight
-        # input.shape[0] x cond_channels by concat along last dim
-        return torch.cat([f.cos(), f.sin()], dim=-1)
+        # Outer-product
+        f = 2 * torch.pi * input.unsqueeze(1) @ self.weight     # input.shape[0] x cond_channels//2
+        return torch.cat([f.cos(), f.sin()], dim=-1)            # input.shape[0] x cond_channels
     
 class LabelEmbedding(nn.Module):
     def __init__(self,
-                 num_classes: int,
+                 nb_classes: int,
                  cond_channels: int) -> None:
         super().__init__()
-        self.embedding = nn.Embedding(num_classes, cond_channels)
+        self.embedding = nn.Embedding(nb_classes, cond_channels)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return self.embedding(input)
 
-class CondBatchNorm2d(nn.Module):
+class CondModule(nn.Module):
+    pass
+
+# TODO: https://github.com/crowsonkb/k-diffusion/blob/045515774882014cc14c1ba2668ab5bad9cbf7c0/k_diffusion/layers.py#L141
+# class CondSeq(nn.Sequential, CondModule):
+#     def forward(self,
+#                 x: torch.Tensor,
+#                 cond: torch.Tensor) -> torch.Tensor:
+
+class CondBatchNorm2d(CondModule):
     def __init__(self,
                  nb_channels: int,
                  cond_channels: int) -> None:
@@ -38,12 +48,11 @@ class CondBatchNorm2d(nn.Module):
 
     def forward(self,
                 x: torch.Tensor,
-                cond: torch.Tensor) :
-        # N x C x 1 x 1 each
-        gamma, beta = self.bn_params(cond)[:, :, None, None].chunk(2, dim=1)
+                cond: torch.Tensor) -> torch.Tensor:
+        gamma, beta = self.bn_params(cond)[:, :, None, None].chunk(2, dim=1)  # N x C x 1 x 1 each
         return beta+gamma*self.norm(x)
     
-class CondResidualBlock(nn.Module):
+class CondResidualBlock(CondModule):
     def __init__(self,
                  in_channels: int,
                  cond_channels: int,
@@ -70,7 +79,7 @@ class CondResidualBlock(nn.Module):
             return x + self.proj(y)
         return x + y
 
-class MHSelfAttention2d(nn.Module):
+class MHSelfAttention2d(CondModule):
     def __init__(self,
                  in_channels: int,
                  nb_heads: int,
@@ -79,41 +88,41 @@ class MHSelfAttention2d(nn.Module):
         assert in_channels % nb_heads == 0, "q,k,v emb. dim: in_channels/nb_heads should be an integer"
         self.nb_heads, self.norm = nb_heads, norm(in_channels)
         self.qkv_proj = nn.Conv2d(in_channels, in_channels*3, kernel_size=1)
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # shape unchanged
+        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # shape unchanged, affine transformation
         # TODO: how important is the init here? Karras set weights and biases of conv to 0 initially
 
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor) -> torch.Tensor:
-        qkv = self.qkv_proj(self.norm(x, cond))             # N x 3C x H x W
-        qkv = qkv.view(x.shape[0], 3*self.nb_heads, -1)     # N x 3nb_heads x C//nb_heads x HW
-        Q, K, V = (qkv.transpose(-1, -2)).chunk(3, dim=1)   # N x nb_heads x HW x C//nb_heads each
-        Y = F.scaled_dot_product_attention(Q, K, V)         # N x nb_heads x HW x C//nb_heads
-        y = Y.transpose(-1, -2).contiguous().view(*x.shape) # N x C x H x W
+        qkv = self.qkv_proj(self.norm(x, cond))                                        # N x 3C x H x W
+        qkv = qkv.view(x.shape[0], 3*self.nb_heads, x.shape[1]//self.nb_heads, -1)     # N x 3nb_heads x C//nb_heads x HW
+        Q, K, V = (qkv.transpose(-1, -2)).chunk(3, dim=1)                              # N x nb_heads x HW x C//nb_heads each
+        Y = F.scaled_dot_product_attention(Q, K, V)                                    # N x nb_heads x HW x C//nb_heads
+        y = Y.transpose(-1, -2).contiguous().view(*x.shape)                            # N x C x H x W
         return x + self.conv(y)
 
-class UpDownBlock(nn.Module):
+class CondUpDownBlock(CondModule):
     def __init__(self,
                  in_channels: int,
-                 mid_channels: int,  # 'bottleneck'
+                 mid_channels: int,
                  out_channels: int,
                  cond_channels: int,
-                 nb_heads: int=64,
-                 num_layers: int=1,
-                 down: Optional[bool]=None) -> None:
+                 nb_heads: int=2,
+                 nb_layers: int=1,
+                 updown_state: State=State.NONE) -> None:
         super().__init__()
         # All the conditioning go into the normalization layers
-        self.down = down
+        self.updown_state = updown_state
         self.layers = []
         mid = mid_channels
 
         # Downsampling/avg pooling to shrink the spatial resolution, not number of channels
         # TODO: Karras used something else
-        if down: self.layers.append(nn.AvgPool2d(2, 2))
+        if updown_state == State.DOWN: self.layers.append(nn.AvgPool2d(2, 2))
 
-        for i in range(num_layers):
+        for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
-            noc = out_channels if i == num_layers-1 else mid
+            noc = out_channels if i == nb_layers-1 else mid
 
             norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)
             
@@ -126,7 +135,7 @@ class UpDownBlock(nn.Module):
                                                  norm=norm))
         # Upsampling to increase the spatial resolution. Half also the num. of channels
         # TODO: Karras used something else
-        if down is not None and not(down):
+        if updown_state == State.UP:
             self.layers.append(nn.Upsample(scale_factor=2))
             self.layers.append(nn.Conv2d(out_channels, out_channels//2, kernel_size=1, padding=1))
             # TODO: check the out_channels//2
@@ -136,6 +145,16 @@ class UpDownBlock(nn.Module):
                 cond: torch.Tensor,
                 skip: Optional[torch.Tensor]=None) -> torch.Tensor:
         y = x if skip is None else torch.cat([x, skip], dim=1)  # channel-wise
-        for l in self.layers:
-            y = l(y, cond)
+        if self.updown_state == State.DOWN:
+            y = self.layers.pop(0)(y)
+            for l in self.layers:
+                y = l(y, cond)
+        elif self.updown_state == State.UP:
+            last = self.layers.pop(-1)
+            for l in self.layers:
+                y = l(y, cond)
+            y = last(y)
+        else:
+            for l in self.layers:
+                y = l(y, cond)
         return y

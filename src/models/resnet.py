@@ -9,16 +9,16 @@ class ResNet(nn.Module):
     def __init__(self,
                  image_channels: int,
                  nb_channels: int,
-                 num_blocks: int,
+                 nb_blocks: int,
                  cond_channels: int,
-                 num_classes: Optional[int]=None) -> None:
+                 nb_classes: Optional[int]=None) -> None:
         super().__init__()
-        self.num_classes = num_classes
+        self.nb_classes = nb_classes
         self.noise_emb = NoiseEmbedding(cond_channels)
-        if self.num_classes: self.label_emb = LabelEmbedding(num_classes+1, cond_channels)  # incl. fake label to represent uncond.
+        if self.nb_classes: self.label_emb = LabelEmbedding(nb_classes+1, cond_channels)  # incl. fake label to represent uncond.
 
         self.conv_in = nn.Conv2d(image_channels, nb_channels, kernel_size=3, padding=1)
-        self.blocks  = nn.ModuleList([CondResidualBlock(nb_channels, cond_channels) for _ in range(num_blocks)])
+        self.blocks  = nn.ModuleList([CondResidualBlock(nb_channels, cond_channels) for _ in range(nb_blocks)])
         self.conv_out = nn.Conv2d(nb_channels, image_channels, kernel_size=3, padding=1)
         
     def forward(self,
@@ -39,7 +39,7 @@ class ResNet(nn.Module):
         ## Conditioning
         cond = self.noise_emb(c_noise)
         # Classifier-Free Guidance
-        cond += self.label_emb(c_label) if (c_label is not None and self.num_classes is not None) else 0
+        cond += self.label_emb(c_label) if (c_label is not None and self.nb_classes is not None) else 0
         
         ## Forward w/ conditioning
         x = self.conv_in(noisy_input)
