@@ -90,9 +90,9 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
         image_channels=info.image_channels,     # e.g. 3
         in_channels=cfg.model.nb_channels,      # nb channels in ResNet, e.g. 64
         mid_channels=cfg.model.nb_channels,
-        num_blocks=cfg.model.num_blocks,        # nb of resblocks, e.g. 10
+        nb_blocks=cfg.model.num_blocks,        # nb of resblocks, e.g. 10
         cond_channels=cfg.model.cond_channels,  # cond. embed dim, e.g. 8
-        num_classes=info.num_classes            # will +1 fake label for CFG
+        nb_classes=info.num_classes            # will +1 fake label for CFG
     )
     criterion = nn.MSELoss()
     model.to(device=device)

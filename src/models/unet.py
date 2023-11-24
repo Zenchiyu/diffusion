@@ -24,7 +24,7 @@ class UNet(nn.Module):
         down_blocks  = []
         up_blocks  = []
         for i in range(nb_blocks//2):
-            nic = in_channels if i == 0 else mid_channels*2**i
+            nic = in_channels if i == 0 else mid  # mid_channels*2**i
             mid = mid_channels if i == 0 else nic*2
 
             down_blocks.append(CondUpDownBlock(in_channels=nic,

@@ -66,8 +66,9 @@ class CondResidualBlock(CondModule):
         self.norm2 = CondBatchNorm2d(mid_channels, cond_channels)
         self.conv2 = nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1)
 
+        # TODO: check this
         if out_channels != in_channels:
-            self.proj = nn.Conv2d(out_channels, in_channels, kernel_size=1)  # spatial-resolution unchanged
+            self.proj = nn.Conv2d(in_channels, out_channels, kernel_size=1)  # spatial-resolution unchanged
         # TODO: how important is the init here? Karras used nn.init.orthonogal_
     
     def forward(self,
@@ -76,7 +77,7 @@ class CondResidualBlock(CondModule):
         y = self.conv1(F.relu(self.norm1(x, cond)))
         y = self.conv2(F.relu(self.norm2(y, cond)))
         if x.shape != y.shape:
-            return x + self.proj(y)
+            return self.proj(x) + y
         return x + y
 
 class MHSelfAttention2d(CondModule):
@@ -116,9 +117,12 @@ class CondUpDownBlock(CondModule):
         self.layers = []
         mid = mid_channels
 
-        # Downsampling/avg pooling to shrink the spatial resolution, not number of channels
+        # Upsampling to increase the spatial resolution. Half also the num. of channels
         # TODO: Karras used something else
-        if updown_state == State.DOWN: self.layers.append(nn.AvgPool2d(2, 2))
+        if updown_state == State.UP:
+            self.layers.append(nn.Upsample(scale_factor=2))
+            self.layers.append(nn.Conv2d(out_channels, out_channels//2, kernel_size=1, padding=1))
+            # TODO: check the out_channels//2
 
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
@@ -133,27 +137,24 @@ class CondUpDownBlock(CondModule):
             self.layers.append(MHSelfAttention2d(in_channels=noc,
                                                  nb_heads=nb_heads,
                                                  norm=norm))
-        # Upsampling to increase the spatial resolution. Half also the num. of channels
+        # Downsampling/avg pooling to shrink the spatial resolution, not number of channels
         # TODO: Karras used something else
-        if updown_state == State.UP:
-            self.layers.append(nn.Upsample(scale_factor=2))
-            self.layers.append(nn.Conv2d(out_channels, out_channels//2, kernel_size=1, padding=1))
-            # TODO: check the out_channels//2
-
+        if updown_state == State.DOWN: self.layers.append(nn.AvgPool2d(2, 2))
+        
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor,
                 skip: Optional[torch.Tensor]=None) -> torch.Tensor:
         y = x if skip is None else torch.cat([x, skip], dim=1)  # channel-wise
         if self.updown_state == State.DOWN:
-            y = self.layers.pop(0)(y)
-            for l in self.layers:
-                y = l(y, cond)
-        elif self.updown_state == State.UP:
             last = self.layers.pop(-1)
             for l in self.layers:
                 y = l(y, cond)
             y = last(y)
+        elif self.updown_state == State.UP:
+            y = self.layers.pop(0)(y)
+            for l in self.layers:
+                y = l(y, cond)
         else:
             for l in self.layers:
                 y = l(y, cond)
