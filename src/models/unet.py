@@ -16,6 +16,7 @@ class UNet(nn.Module):
                  cond_channels: int,
                  nb_classes: Optional[int]=None):
         super().__init__()
+        assert nb_blocks >= 2
         self.nb_classes = nb_classes
         self.noise_emb = NoiseEmbedding(cond_channels)
         if self.nb_classes: self.label_emb = LabelEmbedding(nb_classes+1, cond_channels)  # incl. fake label to represent uncond.
@@ -24,7 +25,7 @@ class UNet(nn.Module):
         down_blocks  = []
         up_blocks  = []
         for i in range(nb_blocks//2):
-            nic = in_channels if i == 0 else mid  # mid_channels*2**i
+            nic = in_channels if i == 0 else mid
             mid = mid_channels if i == 0 else nic*2
 
             down_blocks.append(CondUpDownBlock(in_channels=nic,
@@ -33,14 +34,16 @@ class UNet(nn.Module):
                                                 cond_channels=cond_channels,
                                                 updown_state=State.DOWN))
         # Bridge
-        up_blocks.append(CondUpDownBlock(in_channels=mid,
-                                     mid_channels=mid*2,
-                                     out_channels=mid*2,
-                                     cond_channels=cond_channels,
-                                     updown_state=State.UP))
+        nic = mid
+        mid = nic*2
+        self.bridge = CondUpDownBlock(in_channels=nic,
+                                      mid_channels=mid,
+                                      out_channels=mid,
+                                      cond_channels=cond_channels,
+                                      updown_state=State.NONE)
         for i in range(nb_blocks//2):
-            nic = mid_channels if i == 0 else mid*2
-            mid = in_channels if i == 0 else mid_channels*2**i
+            nic = 2*mid_channels if i == nb_blocks//2-1 else mid
+            mid = in_channels if i == nb_blocks//2-1 else nic//2
             
             up_blocks.append(CondUpDownBlock(in_channels=nic,
                                                 mid_channels=mid,
@@ -48,7 +51,7 @@ class UNet(nn.Module):
                                                 cond_channels=cond_channels,
                                                 updown_state=State.UP))
         self.down_blocks = nn.ModuleList(down_blocks)
-        self.up_blocks = nn.ModuleList(reversed(up_blocks))
+        self.up_blocks = nn.ModuleList(up_blocks)
         self.conv_out = nn.Conv2d(in_channels, image_channels, kernel_size=3, padding=1)
         
     def forward(self,
@@ -66,7 +69,7 @@ class UNet(nn.Module):
         for block in self.down_blocks:
             x = block(x, cond)
             skips.append(x)
-        skips.append(None)  # bridge
+        x = self.bridge(x, cond)
         for skip, block in zip(reversed(skips), self.up_blocks):
-            x = block(x, cond, skip=skip)
+            x = block(x, cond, skip)
         return self.conv_out(x)

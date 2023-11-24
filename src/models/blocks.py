@@ -120,10 +120,10 @@ class CondUpDownBlock(CondModule):
         # Upsampling to increase the spatial resolution. Half also the num. of channels
         # TODO: Karras used something else
         if updown_state == State.UP:
-            self.layers.append(nn.Upsample(scale_factor=2))
-            self.layers.append(nn.Conv2d(out_channels, out_channels//2, kernel_size=1, padding=1))
-            # TODO: check the out_channels//2
-
+            self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2),
+                                             nn.Conv2d(in_channels, in_channels//2, kernel_size=1, padding=1)))
+            in_channels //= 2
+            
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
             noc = out_channels if i == nb_layers-1 else mid
@@ -139,23 +139,26 @@ class CondUpDownBlock(CondModule):
                                                  norm=norm))
         # Downsampling/avg pooling to shrink the spatial resolution, not number of channels
         # TODO: Karras used something else
-        if updown_state == State.DOWN: self.layers.append(nn.AvgPool2d(2, 2))
+        if updown_state == State.DOWN:
+            self.layers.append(nn.AvgPool2d(2, 2))
         
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor,
                 skip: Optional[torch.Tensor]=None) -> torch.Tensor:
-        y = x if skip is None else torch.cat([x, skip], dim=1)  # channel-wise
-        if self.updown_state == State.DOWN:
-            last = self.layers.pop(-1)
-            for l in self.layers:
-                y = l(y, cond)
-            y = last(y)
-        elif self.updown_state == State.UP:
-            y = self.layers.pop(0)(y)
-            for l in self.layers:
-                y = l(y, cond)
-        else:
-            for l in self.layers:
-                y = l(y, cond)
+        y = x
+        match self.updown_state:
+            case State.DOWN:
+                last = self.layers.pop(-1)
+                for l in self.layers:
+                    y = l(y, cond)
+                y = last(y)
+            case State.UP:
+                y = self.layers.pop(0)(y)
+                y = y if skip is None else torch.cat([y, skip], dim=1)  # channel-wise
+                for l in self.layers:
+                    y = l(y, cond)
+            case _:
+                for l in self.layers:
+                    y = l(y, cond)
         return y
