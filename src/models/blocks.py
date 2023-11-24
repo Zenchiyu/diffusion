@@ -114,7 +114,7 @@ class CondUpDownBlock(CondModule):
         super().__init__()
         # All the conditioning go into the normalization layers
         self.updown_state = updown_state
-        self.layers = []
+        self.layers = nn.ModuleList([])
         mid = mid_channels
 
         # Upsampling to increase the spatial resolution. Half also the num. of channels
@@ -123,7 +123,7 @@ class CondUpDownBlock(CondModule):
             self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2),
                                              nn.Conv2d(in_channels, in_channels//2, kernel_size=1, padding=1)))
             in_channels //= 2
-            
+
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
             noc = out_channels if i == nb_layers-1 else mid
