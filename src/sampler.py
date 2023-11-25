@@ -3,7 +3,7 @@ import torch
 
 from diffusion import Diffusion
 from init import init
-from utils import display
+from utils import display, save
 
 from omegaconf import DictConfig
 from typing import Optional, Callable
@@ -117,21 +117,32 @@ def sampler(cfg: DictConfig):
     # Don't use the checkpoint seed for sampling
     torch.seed()
 
+    # # Sample and display
+    # N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
+    # samples, samples_inter = sample(
+    #         N, C, H, model, diffusion,
+    #         uncond_label=info.num_classes,
+    #         label=cfg.common.sampling.label,
+    #         cfg_scale=cfg.common.sampling.cfg_scale,
+    #         num_steps=cfg.common.sampling.num_steps,
+    #         track_inter=True
+    #     )
+
+    # display(samples)
+    # # Display intermediate generation steps 
+    # # for the first generated picture
+    # display(samples_inter[:, 0].view(-1, C, H, W))
+
     # Sample and display
-    N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
-    samples, samples_inter = sample(
+    N, C, H, W = 3*30*info.num_classes, info.image_channels, info.image_size, info.image_size
+    samples = sample(
             N, C, H, model, diffusion,
             uncond_label=info.num_classes,
-            label=cfg.common.sampling.label,
+            label=torch.repeat_interleave(torch.arange(info.num_classes), 3*30),
             cfg_scale=cfg.common.sampling.cfg_scale,
-            num_steps=cfg.common.sampling.num_steps,
-            track_inter=True
-        )
+            num_steps=cfg.common.sampling.num_steps)
 
-    display(samples)
-    # Display intermediate generation steps 
-    # for the first generated picture
-    display(samples_inter[:, 0].view(-1, C, H, W))
+    save(samples, "./src/images/all.png", nrow=30)
 
 if __name__ == "__main__":
     sampler()
