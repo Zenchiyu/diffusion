@@ -5,3 +5,4 @@ outputs/
 old/
 checkpoints/
 .vscode/
+.coverage
