@@ -26,15 +26,17 @@ def float2uint8(x: torch.Tensor) -> torch.Tensor:
     return x.clamp(-1, 1).add(1).div(2).mul(255).byte()  # [-1., 1.] -> [0., 1.] -> [0, 255]
 
 def display(x: torch.Tensor,
-            nrow: int=8) -> None:
-    x = make_grid(float2uint8(x), nrow=nrow)
+            nrow: int=8,
+            padding: int=2) -> None:
+    x = make_grid(float2uint8(x), nrow=nrow, padding=padding)
     x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
     plt.imshow(x)
     plt.show()
 
 def save(x: torch.Tensor,
          save_path: str,
-         nrow: int=8) -> None:
-    x = make_grid(float2uint8(x), nrow=nrow)
+         nrow: int=8,
+         padding: int=2) -> None:
+    x = make_grid(float2uint8(x), nrow=nrow, padding=padding)
     x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
     x.save(save_path)
