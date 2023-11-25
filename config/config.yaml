@@ -27,7 +27,7 @@ diffusion:
 
 model:
   nb_channels: 64  # resnet channels
-  num_blocks: 10  #25    # resnet blocks
+  num_blocks: 4 # 10  #25    # resnet blocks
   cond_channels: 8
 
 optim:  # Adam optimizer
