@@ -16,7 +16,7 @@ class UNet(nn.Module):
                  cond_channels: int,
                  nb_classes: Optional[int]=None):
         super().__init__()
-        assert nb_blocks >= 2
+        assert (nb_blocks % 2 == 0) and (nb_blocks >= 2)
         self.nb_classes = nb_classes
         self.noise_emb = NoiseEmbedding(cond_channels)
         if self.nb_classes: self.label_emb = LabelEmbedding(nb_classes+1, cond_channels)  # incl. fake label to represent uncond.
