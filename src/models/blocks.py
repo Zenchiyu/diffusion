@@ -149,9 +149,9 @@ class CondUpDownBlock(CondModule):
         y = x
         match self.updown_state:
             case State.UP | State.DOWN:
-                y = self.layers.pop(0)(y)
+                y = self.layers[0](y)
                 y = y if skip is None else torch.cat([y, skip], dim=1)  # channel-wise
-                for l in self.layers:
+                for l in self.layers[1:]:
                     y = l(y, cond)
             case _:
                 for l in self.layers:
