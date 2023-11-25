@@ -1,6 +1,8 @@
 # Diffusion
 Deep Learning Project on Diffusion Models for Image Generation
 
+![Classifier-Free Guidance generated, cfg.scale=1](src/images/all.png)
+
 # How To Use?
 
 ## Training
