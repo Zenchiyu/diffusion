@@ -24,7 +24,7 @@ python src/sampler.py
 
 Example
 ```bash
-python src/sampler.py common.sampling.label=7 common.sampling.cfg_scale=0.8
+python src/sampler.py common.sampling.label=7 common.sampling.cfg_scale=1
 ```
 
 # Tests
