@@ -1,6 +1,8 @@
 # Diffusion
 Deep Learning Project on Diffusion Models for Image Generation
 
+![Classifier-Free Guidance generated, cfg.scale=1](src/images/all.png)
+
 # How To Use?
 
 ## Training
@@ -22,7 +24,7 @@ python src/sampler.py
 
 Example
 ```bash
-python src/sampler.py common.sampling.label=7 common.sampling.cfg_scale=0.8
+python src/sampler.py common.sampling.label=7 common.sampling.cfg_scale=1
 ```
 
 # Tests
