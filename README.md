@@ -24,3 +24,9 @@ Example
 ```bash
 python src/sampler.py common.sampling.label=7 common.sampling.cfg_scale=0.8
 ```
+
+# Tests
+
+```
+python -m unittest discover -s tests/
+```

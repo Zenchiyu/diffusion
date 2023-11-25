@@ -4,3 +4,4 @@ wandb/
 outputs/
 old/
 checkpoints/
+.vscode/
