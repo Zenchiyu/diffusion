@@ -15,6 +15,8 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 
 ## Training
 
+If you want to train a model from scratch, please make sure to delete `checkpoints/checkpoint.pth`, otherwise training will resume.
+
 ```bash
 python src/trainer.py
 ```
