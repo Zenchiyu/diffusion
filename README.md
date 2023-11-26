@@ -58,6 +58,10 @@ python -m coverage report --omit=*python3*
 
 # Credits
 
+The computations were performed at University of Geneva using Baobab/Yggdrasil HPC service
+
 - https://github.com/pytorch/pytorch
 - https://wandb.ai
-- The computations were performed at University of Geneva using Baobab/Yggdrasil HPC service
+- https://github.com/zalandoresearch/fashion-mnist
+- https://www.cs.toronto.edu/~kriz/cifar.html
+- http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
