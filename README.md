@@ -1,7 +1,9 @@
 # Diffusion
 Deep Learning Project on Diffusion Models for Image Generation
 
-![Classifier-Free Guidance generated, cfg.scale=1](src/images/all.png)
+| <img src="src/images/all_fashionmnist_90.png" width=500> | <img src="src/images/all_cifar10_90.png" width=500> |
+|:--:| :--:|
+| *FashionMNIST cfg.scale=1* | *CIFAR-10 cfg.scale=1* |
 
 # How To Use?
 
