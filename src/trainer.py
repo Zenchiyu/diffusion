@@ -32,7 +32,7 @@ def trainer(cfg: DictConfig):
         acc_loss = 0
         for X, y in dl.train:
             X = X.to(device=device)  # N x C x H x W
-            y = y.to(device=device)
+            if y is not None: y = y.to(device=device)
 
             noise_level = diffusion.sample_sigma(X.shape[0])
             cin = diffusion.cin(noise_level)

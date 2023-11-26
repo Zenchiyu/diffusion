@@ -16,7 +16,7 @@ common:
     chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
 
 dataset:
-  name: CIFAR10  # FashionMNIST
+  name: CelebA  # FashionMNIST, CIFAR10
   root_dir: ./data  # relative to cwd
   batch_size: 32
   num_workers: 0
