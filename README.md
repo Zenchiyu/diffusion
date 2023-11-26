@@ -59,3 +59,9 @@ python -m coverage run -m unittest discover -s tests/
 ```
 python -m coverage report --omit=*python3*
 ```
+
+# Credits
+
+- https://github.com/pytorch/pytorch
+- https://wandb.ai
+- The computations were performed at University of Geneva using Baobab/Yggdrasil HPC service
