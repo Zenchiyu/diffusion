@@ -1,9 +1,16 @@
 # Diffusion
 Deep Learning Project on Diffusion Models for Image Generation
 
+| <img src="src/images/all_fashionmnist_10.png" width=500> | <img src="src/images/all_cifar10_10.png" width=500> |
+|:--:| :--:|
+| *FashionMNIST cfg.scale=1* | *CIFAR-10 cfg.scale=1* |
+
+
+
 | <img src="src/images/all_fashionmnist_90.png" width=500> | <img src="src/images/all_cifar10_90.png" width=500> |
 |:--:| :--:|
 | *FashionMNIST cfg.scale=1* | *CIFAR-10 cfg.scale=1* |
+
 
 # How To Use?
 
@@ -22,12 +29,18 @@ python src/trainer.py
 python src/sampler.py
 ```
 
-- Classifier-Free Guidance (CFG)
+- Classifier-Free Guidance (CFG) for a single class
 
-Example
 ```bash
-python src/sampler.py common.sampling.label=7 common.sampling.cfg_scale=1
+python src/sampler.py common.sampling.label=<class-id> common.sampling.cfg_scale=1
 ```
+
+- Classifier-Free Guidance (CFG) for all classes
+
+```bash
+python src/sampler_all.py common.sampling.cfg_scale=1
+```
+
 
 # Tests
 
