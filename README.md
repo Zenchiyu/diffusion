@@ -3,13 +3,9 @@ Deep Learning Project on Diffusion Models for Image Generation
 
 | <img src="src/images/all_fashionmnist_10.png" width=500> | <img src="src/images/all_cifar10_10.png" width=500> |
 |:--:| :--:|
-| *FashionMNIST cfg.scale=1* | *CIFAR-10 cfg.scale=1* |
-
-
-
 | <img src="src/images/all_fashionmnist_90.png" width=500> | <img src="src/images/all_cifar10_90.png" width=500> |
 |:--:| :--:|
-| *FashionMNIST cfg.scale=1* | *CIFAR-10 cfg.scale=1* |
+| *FashionMNIST cfg.scale=1, Euler method* | *CIFAR-10 cfg.scale=1, Euler method* |
 
 
 # How To Use?
