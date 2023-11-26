@@ -16,9 +16,9 @@ common:
     chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
 
 dataset:
-  name: CelebA  # FashionMNIST, CIFAR10, CelebA
+  name: CIFAR10 # FashionMNIST 
   root_dir: ./data  # relative to cwd
-  batch_size: 128
+  batch_size: 32
   num_workers: 0
 
 diffusion:
@@ -26,10 +26,10 @@ diffusion:
   sigma_max: 80
 
 model:
-  nb_channels: 64
+  nb_channels: 64 
   num_blocks: 4
   cond_channels: 8
-  start_self_attention: 2  # no MHA layer for some high-res representation
+  start_self_attention: 0
 
 optim:  # Adam optimizer
   lr: 1e-4
