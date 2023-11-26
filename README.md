@@ -1,5 +1,5 @@
 # Diffusion
-Deep Learning Project on Diffusion Models for Image Generation
+Deep Learning Project on Diffusion Models for Image Generation based on [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)'s paper by Karras et al.
 
 | <img src="src/images/all_fashionmnist_10.png" width=500> | <img src="src/images/all_cifar10_10.png" width=500> |
 |:--:| :--:|
@@ -61,6 +61,7 @@ python -m coverage report --omit=*python3*
 The computations were performed at University of Geneva using Baobab/Yggdrasil HPC service
 
 - https://github.com/pytorch/pytorch
+- https://github.com/crowsonkb/k-diffusion/tree/master
 - https://wandb.ai
 - https://github.com/zalandoresearch/fashion-mnist
 - https://www.cs.toronto.edu/~kriz/cifar.html
