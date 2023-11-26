@@ -64,4 +64,4 @@ The computations were performed at University of Geneva using Baobab/Yggdrasil H
 - https://wandb.ai
 - https://github.com/zalandoresearch/fashion-mnist
 - https://www.cs.toronto.edu/~kriz/cifar.html
-- http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+- https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
