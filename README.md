@@ -11,6 +11,11 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=500> | <img src="src/images/euler/all_cifar10_90_cfgscale_5.png" width=500> |
 | *CIFAR-10 cfg.scale=2.5, Euler method* | *CIFAR-10 cfg.scale=5, Euler method* |
 
+**Cherry-picked generated horse:**
+<p align="center">
+<img src="src/images/euler/horse_cherrypicked_cfgscale_2_5.png" width=500>
+</p>
+
 # How To Use?
 
 ## Training
