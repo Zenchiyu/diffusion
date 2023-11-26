@@ -32,14 +32,6 @@ class UNet(nn.Module):
                                                 out_channels=mid,
                                                 cond_channels=cond_channels,
                                                 updown_state=updown_state))
-        # # Bridge
-        # nic = mid
-        # mid = nic*2
-        # self.bridge = CondUpDownBlock(in_channels=nic,
-        #                               mid_channels=mid,
-        #                               out_channels=mid,
-        #                               cond_channels=cond_channels,
-        #                               updown_state=State.DOWN)
         for i in range(nb_blocks//2):
             nic = 2*mid_channels if i == nb_blocks//2-1 else mid
             mid = in_channels if i == nb_blocks//2-1 else nic//2

@@ -1,9 +1,8 @@
 import hydra
 import torch
 
-from diffusion import Diffusion
 from init import init
-from utils import display, save
+from utils import save
 
 from omegaconf import DictConfig
 from sampler import sample
