@@ -11,6 +11,12 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=500> | <img src="src/images/euler/all_cifar10_90_cfgscale_5.png" width=500> |
 | *CIFAR-10 cfg.scale=2.5, Euler method* | *CIFAR-10 cfg.scale=5, Euler method* |
 
+**Notes:**
+
+- Our **Classifier-Free Guidance** (CFG) scale $\alpha$ corresponds to using $\nabla_x \log p_{t, \alpha}(x|c) = (1-\alpha) \nabla_x \log p_t(x) + \alpha \nabla_x \log p_t(x|c)$ instead of the unconditional score function $\nabla_x \log p_t(x)$ of noisy marginal distributions in the original probability flow ODE $dx = -\dot{\sigma}(t) \sigma(t) \nabla_x \log p_t(x)$.
+- $\nabla_x \log p_{t, \alpha}(x|c)$ can also be rewritten as $\nabla_x \log p_t(x) + \alpha (\nabla_x \log p_t(x|c) - \nabla_x \log p_t(x))$
+- The CFG scale $\alpha$ deforms the distribution and reduces diversity. As we can see from the generated CIFAR-10 pictures, a high CFG scale can cause saturated colors so one may opt for class-dependent scales.
+- Our CFG scale is kept unchanged in our sampling methods.
 
 # How To Use?
 
