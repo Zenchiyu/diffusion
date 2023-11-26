@@ -12,6 +12,7 @@ class UNet(nn.Module):
                  mid_channels: int,
                  nb_blocks: int,
                  cond_channels: int,
+                 start_self_attention: int=0,
                  nb_classes: Optional[int]=None):
         super().__init__()
         assert (nb_blocks % 2 == 0) and (nb_blocks >= 2)
@@ -31,6 +32,7 @@ class UNet(nn.Module):
                                                 mid_channels=mid,
                                                 out_channels=mid,
                                                 cond_channels=cond_channels,
+                                                self_attention=i >= start_self_attention,
                                                 updown_state=updown_state))
         for i in range(nb_blocks//2):
             nic = 2*mid_channels if i == nb_blocks//2-1 else mid
@@ -40,6 +42,7 @@ class UNet(nn.Module):
                                                 mid_channels=mid,
                                                 out_channels=mid,
                                                 cond_channels=cond_channels,
+                                                self_attention=i < nb_blocks//2-start_self_attention,
                                                 updown_state=State.UP))
         self.down_blocks = nn.ModuleList(down_blocks)
         self.up_blocks = nn.ModuleList(up_blocks)

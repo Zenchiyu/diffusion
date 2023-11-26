@@ -110,6 +110,7 @@ class CondUpDownBlock(CondModule):
                  cond_channels: int,
                  nb_heads: int=2,
                  nb_layers: int=1,
+                 self_attention: bool=True,
                  updown_state: State=State.NONE) -> None:
         super().__init__()
         # All the conditioning go into the normalization layers
@@ -138,9 +139,10 @@ class CondUpDownBlock(CondModule):
                                                  mid_channels=mid,
                                                  out_channels=noc,
                                                  cond_channels=cond_channels))
-            self.layers.append(MHSelfAttention2d(in_channels=noc,
-                                                 nb_heads=nb_heads,
-                                                 norm=norm))
+            if self_attention:
+                self.layers.append(MHSelfAttention2d(in_channels=noc,
+                                                    nb_heads=nb_heads,
+                                                    norm=norm))
         
     def forward(self,
                 x: torch.Tensor,

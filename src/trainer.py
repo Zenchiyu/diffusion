@@ -65,7 +65,7 @@ def trainer(cfg: DictConfig):
                          image_size=info.image_size,
                          model=model,
                          diffusion=diffusion,
-                         uncond_label=info.num_classes if info.num_classes is not None else None,
+                         uncond_label=info.num_classes,
                          num_steps=cfg.common.sampling.num_steps)  # it's switching between eval and train modes
         save(samples, str(save_path))
         # Save checkpoint

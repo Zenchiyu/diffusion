@@ -87,12 +87,13 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
     #     num_classes=info.num_classes            # will +1 fake label for CFG
     # )
     model = UNet(
-        image_channels=info.image_channels,     # e.g. 3
-        in_channels=cfg.model.nb_channels,      # nb channels in ResNet, e.g. 64
+        image_channels=info.image_channels,     
+        in_channels=cfg.model.nb_channels,
         mid_channels=cfg.model.nb_channels,
-        nb_blocks=cfg.model.num_blocks,        # nb of resblocks, e.g. 10
-        cond_channels=cfg.model.cond_channels,  # cond. embed dim, e.g. 8
-        nb_classes=info.num_classes            # will +1 fake label for CFG
+        nb_blocks=cfg.model.num_blocks,                         # nb of down + up blocks together
+        cond_channels=cfg.model.cond_channels,
+        start_self_attention=cfg.model.start_self_attention,    # index of starting block that contains MHA layers
+        nb_classes=info.num_classes                             # will +1 fake label for CFG
     )
     criterion = nn.MSELoss()
     model.to(device=device)

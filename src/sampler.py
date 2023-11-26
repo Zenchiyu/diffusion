@@ -13,10 +13,10 @@ def euler_method(
         sigmas: torch.Tensor,
         X_noisy: torch.Tensor,
         D: Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor],
-        uncond_label: int,
+        uncond_label: Optional[int],
     ) -> tuple[torch.Tensor, ...]:
 
-    uncond_label = torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
+    if uncond_label: uncond_label = torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
 
     # Track the iterative procedure
     X_inter = torch.zeros(size=(len(sigmas)+1, ) + X_noisy.shape)
@@ -77,7 +77,7 @@ def sample(
         image_size: int,
         model: torch.nn.Module,
         diffusion: Diffusion,
-        uncond_label: int,
+        uncond_label: Optional[int],
         label: Optional[int]=None,
         cfg_scale: float=0,
         num_steps: int=50,
@@ -97,7 +97,7 @@ def sample(
                         image_size, image_size,
                         device=diffusion.device) * sigmas[0]
     
-    if label is None:
+    if label is None or uncond_label is None:
         X_noisy, X_inter = euler_method(sigmas, X_noisy, D, uncond_label)
     else:
         X_noisy, X_inter = euler_method_conditional(sigmas, X_noisy, D, label, uncond_label, cfg_scale)
