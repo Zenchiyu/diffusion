@@ -1,17 +1,12 @@
 # Diffusion
 Deep Learning Project on Diffusion Models for Image Generation based on [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)'s paper by Karras et al.
 
-| <img src="src/images/euler/all_fashionmnist_10.png" width=250> | <img src="src/images/euler/all_cifar10_10.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_5.png" width=250> |
-|:--:| :--:|:--:| :--:|
-| <img src="src/images/euler/all_fashionmnist_90.png" width=250> | <img src="src/images/euler/all_cifar10_90.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_5.png" width=250> |
-| *FashionMNIST cfg.scale=1, Euler method* | *CIFAR-10 cfg.scale=1, Euler method* | *CIFAR-10 cfg.scale=2.5, Euler method* | *CIFAR-10 cfg.scale=5, Euler method* |
-
-| <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=500> | <img src="src/images/euler/all_cifar10_10_cfgscale_5.png" width=500> |
+| <img src="src/images/euler/all_fashionmnist_10.png" width=500> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=500> |
 |:--:| :--:|
-| <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=500> | <img src="src/images/euler/all_cifar10_90_cfgscale_5.png" width=500> |
-| *CIFAR-10 cfg.scale=2.5, Euler method* | *CIFAR-10 cfg.scale=5, Euler method* |
+| <img src="src/images/euler/all_fashionmnist_90.png" width=500> | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=500> |
+| *FashionMNIST cfg.scale=1, Euler method* | *CIFAR-10 cfg.scale=2.5, Euler method* |
 
-**Cherry-picked generated horse:**
+**Cherry-picked generated horse (cfg.scale=2.5):**
 <p align="center">
 <img src="src/images/euler/horse_cherrypicked_cfgscale_2_5.png" width=500>
 </p>
@@ -69,6 +64,13 @@ python -m coverage report --omit=*python3*
 # Notes
 
 ## Classifier-Free Guidance
+
+CIFAR-10, Euler method:
+
+| <img src="src/images/euler/all_cifar10_10.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_5.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_7.png" width=250> |
+|:--:|:--:| :--:| :--:|
+| <img src="src/images/euler/all_cifar10_90.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_5.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_7.png" width=250> |
+| *cfg.scale=1* | *cfg.scale=2.5* | *cfg.scale=5* | *cfg.scale=7* |
 
 - Our **Classifier-Free Guidance** (CFG) scale $\alpha$ corresponds to using $\nabla_x \log p_{t, \alpha}(x|c) = (1-\alpha) \nabla_x \log p_t(x) + \alpha \nabla_x \log p_t(x|c)$ instead of the unconditional score function $\nabla_x \log p_t(x)$ of noisy marginal distributions in the original probability flow ODE $dx = -\dot{\sigma}(t) \sigma(t) \nabla_x \log p_t(x)dt$.
 - [Classifier-Free Diffusion Guidance](https://arxiv.org/abs/2207.12598) paper uses, assuming we can directly replace a noise by a score function, $\nabla_x \log p_{t, \alpha}(x|c) = -\omega \nabla_x \log p_t(x) + (1+\omega) \nabla_x \log p_t(x|c)$ with $\omega=\alpha-1 > 0$. Therefore our CFG scale $\alpha$ should be greater than $1$.
