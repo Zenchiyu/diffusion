@@ -7,6 +7,7 @@ from utils import save
 from omegaconf import DictConfig
 from sampler import sample
 
+
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
     # Initialization

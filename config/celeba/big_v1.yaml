@@ -1,0 +1,18 @@
+common:
+  training:
+    chkpt_path: ./checkpoints/2023-11-28/run_kblv56eo/checkpoint.pth
+
+dataset:
+  name: CelebA
+  root_dir: ./data  # relative to cwd
+  batch_size: 64
+  num_workers: 0
+  
+model:
+  nb_channels: 64
+  depths: [1, 2, 4]  # bridge has the same 'depth' as depths[-1].
+  # To try: [2, 2, 2, 2]
+  cond_channels: 8
+  self_attentions: [False, False, False]
+  # [False, False, True, True]. Bridge always has self attention for the moment
+  # start_self_attention: 2  # no MHA layer for some high-res representation

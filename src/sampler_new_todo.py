@@ -3,7 +3,7 @@ import torch
 
 from diffusion import Diffusion
 from init import init
-from utils import display, save
+from utils import display
 
 from omegaconf import DictConfig
 from typing import Optional, Callable
@@ -14,6 +14,7 @@ def euler_method(
         X_noisy: torch.Tensor,
         D: Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor],
         uncond_label: Optional[int],
+        improved: bool=False
     ) -> tuple[torch.Tensor, ...]:
 
     if uncond_label: uncond_label = torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
@@ -40,7 +41,8 @@ def euler_method_conditional(
         D: Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor],
         label: int,
         uncond_label: int,
-        cfg_scale: float=0
+        cfg_scale: float=0,
+        improved: bool=True
     ) -> tuple[torch.Tensor, ...]:
     
     label = torch.tensor(label, device=X_noisy.device).expand(X_noisy.shape[0])
@@ -51,20 +53,34 @@ def euler_method_conditional(
     X_inter[0] = X_noisy
     
     for i, sigma in enumerate(sigmas):
-        s = sigma.expand(X_noisy.shape[0])
-        # TODO: concat
-        X_denoised_uncond = D(X_noisy, s, uncond_label)  # based on our model, try to denoise X_noisy
-        X_denoised_cond   = D(X_noisy, s, label)
+        x_noisy = X_noisy.repeat((2,)+(1,)*(X_noisy.ndim-1))
+        s = sigma.expand(2*X_noisy.shape[0])
+        l = torch.cat([uncond_label, label])
 
-        sigma_next = sigmas[i + 1] if i < len(sigmas) - 1 else 0
+        x_denoised = D(x_noisy, s, l)
 
         # Classifier-Free Guidance
-        score_uncond_estimate = (X_noisy - X_denoised_uncond)/sigma**2  # of x_noisy
-        score_cond_estimate   = (X_noisy - X_denoised_cond)/sigma**2    # of x_noisy given label
+        score_uncond_estimate, score_cond_estimate = ((x_noisy - x_denoised)/sigma**2).chunk(2, dim=0)
         s_estimate = torch.lerp(score_uncond_estimate, score_cond_estimate, cfg_scale)
         
+        sigma_next = sigmas[i + 1] if i < len(sigmas) - 1 else 0
         d = sigma*s_estimate  # derivative
-        X_noisy = X_noisy + d * (sigma_next - sigma)  # Perform one step of Euler's method
+        X_next = X_noisy + d * (sigma_next - sigma)  # Perform one step of Euler's method
+        
+        if improved and sigma_next != 0:
+            # Heun a.k.a. improved Euler method:
+            x_noisy = X_next.repeat((2,)+(1,)*(X_next.ndim-1))
+            s = sigma_next.expand(2*X_next.shape[0])
+
+            x_denoised = D(x_noisy, s, l)
+            # CFG
+            score_uncond_estimate, score_cond_estimate = ((x_noisy - x_denoised)/sigma_next**2).chunk(2, dim=0)
+            s_estimate_next = torch.lerp(score_uncond_estimate, score_cond_estimate, cfg_scale)
+            
+            d_next = sigma_next*s_estimate_next
+            X_next = X_noisy + (d/2 + d_next/2) * (sigma_next - sigma)
+
+        X_noisy = X_next
 
         # Track the iterative procedure
         X_inter[i+1] = X_noisy
@@ -127,15 +143,11 @@ def sampler(cfg: DictConfig):
             num_steps=cfg.common.sampling.num_steps,
             track_inter=True
         )
-    dataset_name = str.lower(cfg.dataset.name)
 
-    # display(samples)
-    save(samples, f"./src/images/uncond_samples_{dataset_name}_16.png")
+    display(samples)
     # Display intermediate generation steps 
     # for the first generated picture
-    # display(samples_inter[:, 0].view(-1, C, H, W))
-    save(samples_inter[:, 0].view(-1, C, H, W), f"./src/images/iterative_denoising_process_{dataset_name}.png")
-    
+    display(samples_inter[:, 0].view(-1, C, H, W))
 
 if __name__ == "__main__":
     sampler()

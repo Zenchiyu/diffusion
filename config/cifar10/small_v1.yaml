@@ -1,0 +1,19 @@
+common:
+  training:
+    chkpt_path: ./checkpoints/2023-11-25/run_brm95k23/checkpoint.pth
+
+dataset:
+  name: CIFAR10
+  root_dir: ./data  # relative to cwd
+  batch_size: 32
+  num_workers: 0
+
+model:
+  nb_channels: 64
+  depths: [1, 1]  # equiv. to old num_blocks: 4
+  cond_channels: 8
+  self_attentions: [True, True]  # equiv. to old start_self_attention: 0
+  # Bridge always has self attention for the moment
+
+optim:  # Adam optimizer
+  lr: 1e-4

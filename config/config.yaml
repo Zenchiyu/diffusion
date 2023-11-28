@@ -1,3 +1,12 @@
+defaults:
+  - _self_
+  # Add one of the following right after to use a pre-trained model
+  # after copy-pasting the checkpoint.pth under the correct directory
+  # - /cifar10/small_v1@_here_
+  # - /fashionmnist/small_v1@_here_
+  # - /celeba/small_v1@_here
+  # - /celeba/big_v1@_here
+
 wandb:
   project: diffusion
   mode: online
@@ -17,15 +26,19 @@ common:
   # CFG is ignored when dataset has no labels
   # and the model is only trained uncond. (but still conditioned on noise)
 
+diffusion:
+  sigma_min: 2e-3
+  sigma_max: 80
+
+optim:  # Adam optimizer
+  lr: 1e-4
+
+# I usually change these below:
 dataset:
   name: CelebA  # FashionMNIST, CIFAR10, CelebA
   root_dir: ./data  # relative to cwd
   batch_size: 64
   num_workers: 0
-
-diffusion:
-  sigma_min: 2e-3
-  sigma_max: 80
 
 model:
   nb_channels: 64
@@ -35,6 +48,3 @@ model:
   self_attentions: [False, False, False]
   # [False, False, True, True]. Bridge always has self attention for the moment
   # start_self_attention: 2  # no MHA layer for some high-res representation
-
-optim:  # Adam optimizer
-  lr: 1e-4

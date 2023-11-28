@@ -32,12 +32,6 @@ class LabelEmbedding(nn.Module):
 class CondModule(nn.Module):
     pass
 
-# TODO: https://github.com/crowsonkb/k-diffusion/blob/045515774882014cc14c1ba2668ab5bad9cbf7c0/k_diffusion/layers.py#L141
-# class CondSeq(nn.Sequential, CondModule):
-#     def forward(self,
-#                 x: torch.Tensor,
-#                 cond: torch.Tensor) -> torch.Tensor:
-
 class CondBatchNorm2d(CondModule):
     def __init__(self,
                  nb_channels: int,
@@ -127,7 +121,7 @@ class CondUpDownBlock(CondModule):
         elif updown_state == State.UP:
             self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2),
                                              nn.Conv2d(in_channels, in_channels//2, kernel_size=1)))
-            #TODO: check
+            #TODO: check, TODO kernel_size = 3 and add padding of 1
 
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
