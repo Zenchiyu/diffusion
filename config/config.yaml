@@ -7,18 +7,20 @@ wandb_watch: True  # log more info
 common:
   nb_epochs: 200
   sampling:
-    num_steps: 50   # 100
+    num_steps: 50
     label: null     # class label for Classifier-Free Guidance (CFG)
     cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1
     save_path: ./src/images/samples.png  # relative to cwd
   training:
-    p_uncond: 0.2  # used in Classifier-Free Guidance
+    p_uncond: 0.2  # used to train the uncond. and cond. score function
     chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
+  # CFG is ignored when dataset has no labels
+  # and the model is only trained uncond. (but still conditioned on noise)
 
 dataset:
   name: CelebA  # FashionMNIST, CIFAR10, CelebA
   root_dir: ./data  # relative to cwd
-  batch_size: 128
+  batch_size: 64
   num_workers: 0
 
 diffusion:
@@ -27,9 +29,12 @@ diffusion:
 
 model:
   nb_channels: 64
-  num_blocks: 4
+  depths: [1, 2, 4]  # bridge has the same 'depth' as depths[-1].
+  # To try: [2, 2, 2, 2]
   cond_channels: 8
-  start_self_attention: 2  # no MHA layer for some high-res representation
+  self_attentions: [False, False, False]
+  # [False, False, True, True]. Bridge always has self attention for the moment
+  # start_self_attention: 2  # no MHA layer for some high-res representation
 
 optim:  # Adam optimizer
   lr: 1e-4

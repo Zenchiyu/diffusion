@@ -19,11 +19,14 @@ def trainer(cfg: DictConfig):
      begin_date, save_path, chkpt_path) = init_tuple
 
     seed = torch.random.initial_seed()  # retrieve current seed
+    nb_params = sum(map(lambda x: x.numel(), model.parameters()))
+    print(f"\nNumber of parameters: {nb_params}")
 
     if cfg.wandb.mode == "online":
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
                          **cfg.wandb)
         run.watch(model, criterion, log="all", log_graph=True)
+        run.summary["nb_params"] = nb_params
         copy_config(run, begin_date=begin_date)
 
     # Training

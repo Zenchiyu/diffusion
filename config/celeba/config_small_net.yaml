@@ -27,9 +27,11 @@ diffusion:
 
 model:
   nb_channels: 64
-  num_blocks: 4
+  depths: [1, 1]  # equiv. to old num_blocks: 4
   cond_channels: 8
-  start_self_attention: 2  # no MHA layer for some high-res representation
+  self_attentions: [False, False]  # equiv. to old start_self_attention: 2
+  # Bridge always has self attention for the moment
+
 
 optim:  # Adam optimizer
   lr: 1e-4
