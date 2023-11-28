@@ -1,0 +1,36 @@
+wandb:
+  project: diffusion
+  mode: online
+
+wandb_watch: True  # log more info
+
+common:
+  nb_epochs: 200
+  sampling:
+    num_steps: 50   # 100
+    label: null     # class label for Classifier-Free Guidance (CFG)
+    cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1
+    save_path: ./src/images/samples.png  # relative to cwd
+  training:
+    p_uncond: 0.2  # used in Classifier-Free Guidance
+    chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
+
+dataset:
+  name: CelebA  # FashionMNIST, CIFAR10, CelebA
+  root_dir: ./data  # relative to cwd
+  batch_size: 64
+  num_workers: 0
+
+diffusion:
+  sigma_min: 2e-3
+  sigma_max: 80
+
+model:
+  nb_channels: 64
+  depths: [1, 2, 4]  # [1, 1, 2, 4]  # bridge has 4 x (condresblock + mha). [1, 1] for CelebA, CIFAR-10 and FashionMNIST
+  cond_channels: 8
+  self_attentions: [False, False, False]  # [False, False, False, True]  # [False, False] for CelebA, CIFAR-10 and FashionMNIST. Bridge always has self attention for the moment
+  # start_self_attention: 2  # no MHA layer for some high-res representation
+
+optim:  # Adam optimizer
+  lr: 1e-4
