@@ -20,7 +20,7 @@ def trainer(cfg: DictConfig):
 
     seed = torch.random.initial_seed()  # retrieve current seed
     nb_params = sum(map(lambda x: x.numel(), model.parameters()))
-    print(f"\nNumber of parameters: {nb_params}")
+    print(f"\nModel: {model}\n\nNumber of parameters: {nb_params}")
 
     if cfg.wandb.mode == "online":
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),

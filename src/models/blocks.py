@@ -11,11 +11,13 @@ State = Enum('State', ['UP', 'DOWN', 'NONE'])
 class CondModule(nn.Module):
     pass
 
-class CondResSeq(nn.Sequential, CondModule):
-    def __init__(self, layers: nn.ModuleList):
+class CondResSeq(CondModule):
+    def __init__(self,
+                 layers: list[nn.Module],
+                 process: Optional[nn.Module]=None):
         super().__init__()
-        self.process = layers[0]
-        self.layers = layers[1:]
+        self.process = process or nn.Identity()
+        self.layers = nn.ModuleList(layers)
 
     def forward(self,
                 x: torch.Tensor,
@@ -94,7 +96,7 @@ class CondResidualBlock(CondModule):
         if special_init:
             nn.init.zeros_(self.conv2.weight)
             nn.init.zeros_(self.conv2.bias)
-            nn.init.orthogonal_(self.proj.weight)
+            if out_channels != in_channels: nn.init.orthogonal_(self.proj.weight)
 
     def forward(self,
                 x: torch.Tensor,
@@ -115,11 +117,11 @@ class MHSelfAttention2d(CondModule):
         assert in_channels % nb_heads == 0, "q,k,v emb. dim: in_channels/nb_heads should be an integer"
         self.nb_heads, self.norm = nb_heads, norm(in_channels)
         self.qkv_proj = nn.Conv2d(in_channels, in_channels*3, kernel_size=1)
-        self.out_proj = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # shape unchanged because already correct
+        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # out_proj shape unchanged because already correct
         # Init s.t. y=x at init.
         if special_init:
-            nn.init.zeros_(self.out_proj.weight)
-            nn.init.zeros_(self.out_proj.bias)
+            nn.init.zeros_(self.conv.weight)
+            nn.init.zeros_(self.conv.bias)
 
     def forward(self,
                 x: torch.Tensor,
@@ -129,7 +131,7 @@ class MHSelfAttention2d(CondModule):
         Q, K, V = (qkv.transpose(-1, -2)).chunk(3, dim=1)                              # N x nb_heads x HW x C//nb_heads each
         Y = F.scaled_dot_product_attention(Q, K, V)                                    # N x nb_heads x HW x C//nb_heads
         y = Y.transpose(-1, -2).contiguous().view(*x.shape)                            # N x C x H x W
-        return x + self.out_proj(y)
+        return x + self.conv(y)
 
 class CondUpDownBlock(CondResSeq):
     def __init__(self,
@@ -141,31 +143,31 @@ class CondUpDownBlock(CondResSeq):
                  nb_layers: int=1,
                  self_attention: bool=True,
                  updown_state: State=State.NONE) -> None:
-        super().__init__()
         # All the conditioning go into the normalization layers
-        self.updown_state = updown_state
-        self.layers = nn.ModuleList([])
-        mid = mid_channels
+        self.updown_state, self.layers = updown_state, []
+        mid, process = mid_channels, None
 
         # Downsampling/avg pooling, nb of channels stay the same
         # Karras used a conv layer with fixed kernel
         if updown_state == State.DOWN:
-            self.layers.append(nn.AvgPool2d(2, 2))
+            process = nn.AvgPool2d(2, 2)
         # Upsampling + half the num. of channels via conv.
         # Karras used a conv layer with fixed kernel
         elif updown_state == State.UP:
-            self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2, mode='bilinear'),
-                                             nn.Conv2d(in_channels, in_channels//2, kernel_size=3, padding=1)))
+            process = nn.Sequential(nn.Upsample(scale_factor=2, mode='bilinear'),
+                                    nn.Conv2d(in_channels, in_channels//2, kernel_size=3, padding=1))
         
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
             noc = out_channels if i == nb_layers-1 else mid
             norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)  # a different BN per layer
             
-            self.layers.append(CondResidualBlock(nic, mid, noc, cond_channels))
+            self.layers.append(CondResidualBlock(in_channels=nic, mid_channels=mid, out_channels=noc, cond_channels=cond_channels))
             if self_attention:
                 self.layers.append(MHSelfAttention2d(in_channels=noc, nb_heads=nb_heads, norm=norm))
         
+        super().__init__(self.layers, process=process)
+
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor,
