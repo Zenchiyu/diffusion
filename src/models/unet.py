@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from enum import Enum
 from typing import Optional
 from .blocks import NoiseEmbedding, LabelEmbedding, CondUpDownBlock, State
 
@@ -14,7 +13,6 @@ class UNet(nn.Module):
                  cond_channels: int,
                  self_attentions: bool|list[bool] = True,
                  self_attention_bridge: bool=True,
-                 #start_self_attention: int=0,
                  nb_classes: Optional[int]=None):
         super().__init__()
         assert (len(depths) >= 1)
@@ -41,7 +39,6 @@ class UNet(nn.Module):
                                                 cond_channels=cond_channels,
                                                 nb_layers=depths[idx],
                                                 self_attention=self_attention,
-                                                #self_attention=i >= start_self_attention,
                                                 updown_state=updown_state))
         for i in range(len(depths)):
             nic = 2*min_channels if i == len(depths)-1 else mid
@@ -54,7 +51,6 @@ class UNet(nn.Module):
                                                 cond_channels=cond_channels,
                                                 nb_layers=depths[idx],
                                                 self_attention=self_attentions[idx],
-                                                #self_attention=i < len(depths)-start_self_attention,
                                                 updown_state=State.UP))
         self.down_blocks = nn.ModuleList(down_blocks)
         self.up_blocks = nn.ModuleList(up_blocks)

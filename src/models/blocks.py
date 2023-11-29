@@ -7,6 +7,29 @@ from typing import Optional, Callable
 
 State = Enum('State', ['UP', 'DOWN', 'NONE'])
 
+# CondModule & CondSequential: Helper classes to make code cleaner
+class CondModule(nn.Module):
+    pass
+
+class CondResSeq(nn.Sequential, CondModule):
+    def __init__(self, layers: nn.ModuleList):
+        super().__init__()
+        self.process = layers[0]
+        self.layers = layers[1:]
+
+    def forward(self,
+                x: torch.Tensor,
+                cond: torch.Tensor,
+                skip: Optional[torch.Tensor]=None) -> torch.Tensor:
+        y = self.process(x)
+        y = y if skip is None else torch.cat([y, skip], dim=1)  # channel-wise
+        for layer in self.layers:
+            if isinstance(layer, CondModule):
+                y = layer(y, cond)
+            else:
+                y = layer(y)
+        return y
+
 class NoiseEmbedding(nn.Module):
     def __init__(self, cond_channels: int) -> None:
         super().__init__()
@@ -29,29 +52,32 @@ class LabelEmbedding(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return self.embedding(input)
 
-class CondModule(nn.Module):
-    pass
-
 class CondBatchNorm2d(CondModule):
     def __init__(self,
                  nb_channels: int,
-                 cond_channels: int) -> None:
+                 cond_channels: int,
+                 special_init: bool=True) -> None:
         super().__init__()
         self.bn_params = nn.Linear(cond_channels, 2*nb_channels)
         self.norm = nn.BatchNorm2d(nb_channels, affine=False)
+        # Init gamma, beta s.t. y=bn(x)=norm(x) behavior at init.
+        if special_init:
+            nn.init.zeros_(self.bn_params.weight)
+            nn.init.zeros_(self.bn_params.bias)
 
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor) -> torch.Tensor:
         gamma, beta = self.bn_params(cond)[:, :, None, None].chunk(2, dim=1)  # N x C x 1 x 1 each
-        return beta+gamma*self.norm(x)
+        return beta + (gamma+1)*self.norm(x)
     
 class CondResidualBlock(CondModule):
     def __init__(self,
                  in_channels: int,
                  cond_channels: int,
                  mid_channels: Optional[int]=None,
-                 out_channels: Optional[int]=None) -> None:
+                 out_channels: Optional[int]=None,
+                 special_init: bool=True) -> None:
         super().__init__()
         mid_channels, out_channels = mid_channels or in_channels, out_channels or in_channels
 
@@ -60,16 +86,21 @@ class CondResidualBlock(CondModule):
         self.norm2 = CondBatchNorm2d(mid_channels, cond_channels)
         self.conv2 = nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1)
 
-        # TODO: check this
-        if out_channels != in_channels:
-            self.proj = nn.Conv2d(in_channels, out_channels, kernel_size=1)  # spatial-resolution unchanged
-        # TODO: how important is the init here? Karras used nn.init.orthonogal_
-    
+        if out_channels != in_channels: 
+            self.proj = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)  # spatial-resolution unchanged
+        
+        # Init s.t. y=x or y=proj(x) at init. where proj initially projects
+        # each Cin x 1 x 1 activation into Cout x 1 x 1 using orthogonal vects.
+        if special_init:
+            nn.init.zeros_(self.conv2.weight)
+            nn.init.zeros_(self.conv2.bias)
+            nn.init.orthogonal_(self.proj.weight)
+
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor) -> torch.Tensor:
-        y = self.conv1(F.relu(self.norm1(x, cond)))
-        y = self.conv2(F.relu(self.norm2(y, cond)))
+        y = self.conv1(F.silu(self.norm1(x, cond)))
+        y = self.conv2(F.silu(self.norm2(y, cond)))
         if x.shape != y.shape:
             return self.proj(x) + y
         return x + y
@@ -78,13 +109,17 @@ class MHSelfAttention2d(CondModule):
     def __init__(self,
                  in_channels: int,
                  nb_heads: int,
-                 norm: Callable[[int], nn.Module]) -> None:
+                 norm: Callable[[int], nn.Module],
+                 special_init: bool=True) -> None:
         super().__init__()
         assert in_channels % nb_heads == 0, "q,k,v emb. dim: in_channels/nb_heads should be an integer"
         self.nb_heads, self.norm = nb_heads, norm(in_channels)
         self.qkv_proj = nn.Conv2d(in_channels, in_channels*3, kernel_size=1)
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # shape unchanged, affine transformation
-        # TODO: how important is the init here? Karras set weights and biases of conv to 0 initially
+        self.out_proj = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # shape unchanged because already correct
+        # Init s.t. y=x at init.
+        if special_init:
+            nn.init.zeros_(self.out_proj.weight)
+            nn.init.zeros_(self.out_proj.bias)
 
     def forward(self,
                 x: torch.Tensor,
@@ -94,9 +129,9 @@ class MHSelfAttention2d(CondModule):
         Q, K, V = (qkv.transpose(-1, -2)).chunk(3, dim=1)                              # N x nb_heads x HW x C//nb_heads each
         Y = F.scaled_dot_product_attention(Q, K, V)                                    # N x nb_heads x HW x C//nb_heads
         y = Y.transpose(-1, -2).contiguous().view(*x.shape)                            # N x C x H x W
-        return x + self.conv(y)
+        return x + self.out_proj(y)
 
-class CondUpDownBlock(CondModule):
+class CondUpDownBlock(CondResSeq):
     def __init__(self,
                  in_channels: int,
                  mid_channels: int,
@@ -112,44 +147,27 @@ class CondUpDownBlock(CondModule):
         self.layers = nn.ModuleList([])
         mid = mid_channels
 
-        # Downsampling/avg pooling to shrink the spatial resolution, not number of channels
-        # TODO: Karras used something else
+        # Downsampling/avg pooling, nb of channels stay the same
+        # Karras used a conv layer with fixed kernel
         if updown_state == State.DOWN:
             self.layers.append(nn.AvgPool2d(2, 2))
-        # Upsampling to increase the spatial resolution. Half also the num. of channels
-        # TODO: Karras used something else
+        # Upsampling + half the num. of channels via conv.
+        # Karras used a conv layer with fixed kernel
         elif updown_state == State.UP:
-            self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2),
-                                             nn.Conv2d(in_channels, in_channels//2, kernel_size=1)))
-            #TODO: check, TODO kernel_size = 3 and add padding of 1
-
+            self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2, mode='bilinear'),
+                                             nn.Conv2d(in_channels, in_channels//2, kernel_size=3, padding=1)))
+        
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
             noc = out_channels if i == nb_layers-1 else mid
-
-            norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)
+            norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)  # a different BN per layer
             
-            self.layers.append(CondResidualBlock(in_channels=nic,
-                                                 mid_channels=mid,
-                                                 out_channels=noc,
-                                                 cond_channels=cond_channels))
+            self.layers.append(CondResidualBlock(nic, mid, noc, cond_channels))
             if self_attention:
-                self.layers.append(MHSelfAttention2d(in_channels=noc,
-                                                    nb_heads=nb_heads,
-                                                    norm=norm))
+                self.layers.append(MHSelfAttention2d(in_channels=noc, nb_heads=nb_heads, norm=norm))
         
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor,
                 skip: Optional[torch.Tensor]=None) -> torch.Tensor:
-        y = x
-        match self.updown_state:
-            case State.UP | State.DOWN:
-                y = self.layers[0](y)
-                y = y if skip is None else torch.cat([y, skip], dim=1)  # channel-wise
-                for l in self.layers[1:]:
-                    y = l(y, cond)
-            case _:
-                for l in self.layers:
-                    y = l(y, cond)
-        return y
+        return super().forward(x, cond, skip)
