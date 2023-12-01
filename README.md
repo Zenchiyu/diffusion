@@ -5,7 +5,7 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 
 ### Unconditional
 
-**CelebA epoch 124, stochastic heun:**
+**CelebA epoch 124, stochastic heun, 33M parameters U-Net model:**
 
 | <img src="src/images/stochastic_heun/v1/uncond_samples_celeba_16_epoch_124.png" width=500> | <img src="src/images/stochastic_heun/v1/iterative_denoising_process_celeba_epoch_124.png" width=500> |
 |:--:| :--:|
