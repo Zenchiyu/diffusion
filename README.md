@@ -1,6 +1,19 @@
 # Diffusion
 Deep Learning Project on Diffusion Models for Image Generation based on [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)'s paper by Karras et al.
 
+## Generated samples
+
+### Unconditional
+
+**CelebA epoch 124, stochastic heun:**
+
+| <img src="src/images/stochastic_heun/v1/uncond_samples_celeba_16_epoch_124.png" width=500> | <img src="src/images/stochastic_heun/v1/iterative_denoising_process_celeba_epoch_124.png" width=500> |
+|:--:| :--:|
+| *Randomly generated faces* | *An iterative denoising process* |
+
+### Conditional with Classifier-Free Guidance
+
+
 | <img src="src/images/euler/all_fashionmnist_10.png" width=500> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=500> |
 |:--:| :--:|
 | <img src="src/images/euler/all_fashionmnist_90.png" width=500> | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=500> |
