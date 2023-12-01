@@ -13,6 +13,7 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 
 ### Conditional with Classifier-Free Guidance
 
+**FashionMNIST and CIFAR-10 epoch 200, euler, 2M parameters U-Net model:**
 
 | <img src="src/images/euler/all_fashionmnist_10.png" width=500> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=500> |
 |:--:| :--:|
