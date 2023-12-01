@@ -63,6 +63,13 @@ python -m coverage report --omit=*python3*
 
 # Notes
 
+## Practical
+
+- Bigger network for more capacity. Going from 2M to 33M parameters: randomly positioned eyes (and more than $2$) to recognizable faces (probably thanks to the Multi-head self-attention layers and bigger receptive fields!)
+- Trade-off between the number of parameters and batch size for higher resolution images due to VRAM limits.
+- We have to place the Multi-head self-attention layers in lower spatial resolution due to the quadratic complexity in attention. A spatial resolution $32^2=32 \times 32$ or $16^2 = 16 \times 16$ is intuitively enough to capture the long-range contextual information/dependencies and costs way less than a spatial resolution of $128^2$. On the other hand convolution layers, at both high and low spatial resolution, fix "local" inconsistencies (up to the receptive field size).
+- TODO: ablation of Multi-head self-attention and more heads as we go in lower resolution latent representations
+
 ## Classifier-Free Guidance
 
 CIFAR-10, Euler method:
