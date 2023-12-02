@@ -16,10 +16,11 @@ class TestBlocks(unittest.TestCase):
         self.model_kwargs = {
             "image_channels": 1,
             "in_channels": cfg.model.nb_channels,
-            "mid_channels": cfg.model.nb_channels,
-            "nb_blocks": cfg.model.num_blocks,
+            "min_channels": cfg.model.nb_channels,
+            "depths": cfg.model.depths,
             "cond_channels": cfg.model.cond_channels,
-            "nb_classes": 10
+            "self_attentions": cfg.model.self_attentions,
+            "nb_classes": None
         }
 
         self.input_shape = (10, self.model_kwargs["image_channels"], 32, 32)
@@ -28,7 +29,7 @@ class TestBlocks(unittest.TestCase):
         self.input = torch.randn(self.input_shape)
         self.inter = torch.randn(self.inter_shape)
         self.noise = torch.randn(self.input_shape[0])
-        self.label = torch.randint(self.model_kwargs["nb_classes"], self.label_shape)
+        self.label = torch.randint(self.model_kwargs["nb_classes"], self.label_shape) if self.model_kwargs["nb_classes"] else None
 
         self.noise_emb = NoiseEmbedding(self.model_kwargs["cond_channels"])
         if self.model_kwargs["nb_classes"]:
@@ -36,7 +37,7 @@ class TestBlocks(unittest.TestCase):
                                             self.model_kwargs["cond_channels"])  # incl. fake label to represent uncond.
         ## Conditioning over noise and label
         self.cond = self.noise_emb(self.noise)
-        self.cond += self.label_emb(self.label)
+        self.cond += self.label_emb(self.label) if self.model_kwargs["nb_classes"] else 0
 
         # Number of times to repeat stochastic tests
         self.num_repeat = 7
@@ -49,9 +50,9 @@ class TestBlocks(unittest.TestCase):
     def test_CondBatchNorm2d_stats(self):
         bn = CondBatchNorm2d(self.input_shape[1], self.model_kwargs["cond_channels"])
         torch.nn.init.zeros_(bn.bn_params.weight)
-        torch.nn.init.ones_(bn.bn_params.bias)
+        torch.nn.init.zeros_(bn.bn_params.bias)
         y = bn(self.input, self.cond)
-        self.assertTrue(torch.allclose(y, bn.norm(self.input) + 1))
+        self.assertTrue(torch.allclose(y, bn.norm(self.input)))
 
     def test_CondResidualBlock_io_shapes(self):
         for _ in range(self.num_repeat):
@@ -101,7 +102,7 @@ class TestBlocks(unittest.TestCase):
             nb_heads = self.inter_shape[1]//embed_dim
             out_channels, nb_layers = self.model_kwargs["in_channels"]*2, 1
             block = CondUpDownBlock(in_channels=self.model_kwargs["in_channels"],
-                                    mid_channels=self.model_kwargs["mid_channels"],
+                                    mid_channels=self.model_kwargs["min_channels"],
                                     out_channels=out_channels,
                                     cond_channels=self.model_kwargs["cond_channels"],
                                     nb_heads=nb_heads,
@@ -121,7 +122,7 @@ class TestBlocks(unittest.TestCase):
             nb_heads = self.inter_shape[1]//embed_dim
             out_channels, nb_layers = self.model_kwargs["in_channels"]*2, 1
             block = CondUpDownBlock(in_channels=self.model_kwargs["in_channels"],
-                                    mid_channels=self.model_kwargs["mid_channels"],
+                                    mid_channels=self.model_kwargs["min_channels"],
                                     out_channels=out_channels,
                                     cond_channels=self.model_kwargs["cond_channels"],
                                     nb_heads=nb_heads,
@@ -140,7 +141,7 @@ class TestBlocks(unittest.TestCase):
             nb_heads = self.inter_shape[1]//embed_dim
             out_channels, nb_layers = self.model_kwargs["in_channels"]*2, 1
             block = CondUpDownBlock(in_channels=self.model_kwargs["in_channels"],
-                                    mid_channels=self.model_kwargs["mid_channels"],
+                                    mid_channels=self.model_kwargs["min_channels"],
                                     out_channels=out_channels,
                                     cond_channels=self.model_kwargs["cond_channels"],
                                     nb_heads=nb_heads,
