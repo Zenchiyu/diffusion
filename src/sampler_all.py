@@ -10,12 +10,14 @@ from sampler import sample
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
+    seed = torch.random.initial_seed()  # retrieve current seed
+
     # Initialization
     init_tuple = init(cfg)
     model, diffusion, info = init_tuple.model, init_tuple.diffusion, init_tuple.info
 
     # Don't use the checkpoint seed for sampling
-    torch.seed()
+    torch.manual_seed(seed)
 
     # Sample 90 pictures for each class and save
     nb_per_class = 3*30
