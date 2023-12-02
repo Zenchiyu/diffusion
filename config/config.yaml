@@ -16,6 +16,7 @@ wandb_watch: True  # log more info
 common:
   nb_epochs: 200
   sampling:
+    method: stochastic_heun # euler  # stochastic_heun  # stochastic (euler), stochastic_heun, null (euler), heun
     num_steps: 50
     label: null     # class label for Classifier-Free Guidance (CFG)
     cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1

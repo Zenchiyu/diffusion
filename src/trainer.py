@@ -12,13 +12,15 @@ from omegaconf import DictConfig, OmegaConf
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def trainer(cfg: DictConfig):
+    run_seed = torch.random.initial_seed()  # retrieve current seed in 
     # Initialization
     init_tuple = init(cfg)
     (model, optimizer, criterion, diffusion,
      dl, info, device, nb_epochs_finished,
      begin_date, save_path, chkpt_path) = init_tuple
 
-    seed = torch.random.initial_seed()  # retrieve current seed
+    dataset_seed = torch.random.initial_seed()  # retrieve seed used for random_split
+    torch.manual_seed(run_seed)                 # reset seed
     nb_params = sum(map(lambda x: x.numel(), model.parameters()))
     print(f"\nModel: {model}\n\nNumber of parameters: {nb_params}")
 
@@ -76,7 +78,7 @@ def trainer(cfg: DictConfig):
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                     "acc_losses": acc_losses,
-                    "seed": seed,
+                    "seed": dataset_seed,
                     "begin_date": begin_date},
                     chkpt_path)
         

@@ -1,6 +1,20 @@
 # Diffusion
 Deep Learning Project on Diffusion Models for Image Generation based on [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)'s paper by Karras et al.
 
+## Generated samples
+
+### Unconditional
+
+**CelebA epoch 124, stochastic heun, 33M parameters U-Net model:**
+
+| <img src="src/images/stochastic_heun/v1/uncond_samples_celeba_16_epoch_124.png" width=500> | <img src="src/images/stochastic_heun/v1/iterative_denoising_process_celeba_epoch_124.png" width=500> |
+|:--:| :--:|
+| *Randomly generated faces* | *An iterative denoising process* |
+
+### Conditional with Classifier-Free Guidance
+
+**FashionMNIST and CIFAR-10 epoch 200, euler, 2M parameters U-Net model:**
+
 | <img src="src/images/euler/all_fashionmnist_10.png" width=500> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=500> |
 |:--:| :--:|
 | <img src="src/images/euler/all_fashionmnist_90.png" width=500> | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=500> |
@@ -62,6 +76,14 @@ python -m coverage report --omit=*python3*
 ```
 
 # Notes
+
+## Practical
+
+- Bigger network for more capacity. Going from 2M to 33M parameters: randomly positioned eyes (and more than $2$) to recognizable faces (probably thanks to the Multi-head self-attention layers and bigger receptive fields!)
+- Trade-off between the number of parameters and batch size for higher resolution images due to VRAM limits.
+- We have to place the Multi-head self-attention layers in lower spatial resolution due to the quadratic complexity in attention. A spatial resolution $32^2=32 \times 32$ or $16^2 = 16 \times 16$ is intuitively enough to capture the long-range contextual information/dependencies and costs way less than a spatial resolution of $128^2$. On the other hand convolution layers, at both high and low spatial resolution, fix "local" inconsistencies (up to the receptive field size).
+- TODO: ablation of Multi-head self-attention and more heads as we go in lower resolution latent representations
+- TODO: train model with fixes + add EMA and gradient clipping and maybe pixel unshuffle/shuffle
 
 ## Classifier-Free Guidance
 
