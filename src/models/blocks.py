@@ -60,10 +60,9 @@ class CondResidualBlock(CondModule):
         self.norm2 = CondBatchNorm2d(mid_channels, cond_channels)
         self.conv2 = nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1)
 
-        # TODO: check this
         if out_channels != in_channels:
             self.proj = nn.Conv2d(in_channels, out_channels, kernel_size=1)  # spatial-resolution unchanged
-        # TODO: how important is the init here? Karras used nn.init.orthonogal_
+        # XXX: Karras did some special init incl. nn.init.orthonogal_
     
     def forward(self,
                 x: torch.Tensor,
@@ -78,17 +77,22 @@ class MHSelfAttention2d(CondModule):
     def __init__(self,
                  in_channels: int,
                  nb_heads: int,
-                 norm: Callable[[int], nn.Module]) -> None:
+                 norm: Callable[[int], nn.Module],
+                 pos_embed: bool=False,
+                 input_shape: tuple[int, int, int]=()) -> None:
         super().__init__()
         assert in_channels % nb_heads == 0, "q,k,v emb. dim: in_channels/nb_heads should be an integer"
         self.nb_heads, self.norm = nb_heads, norm(in_channels)
         self.qkv_proj = nn.Conv2d(in_channels, in_channels*3, kernel_size=1)
         self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # shape unchanged, affine transformation
-        # TODO: how important is the init here? Karras set weights and biases of conv to 0 initially
+        # XXX: Karras set weights and biases of conv to 0 initially
+        
+        self.pe = nn.Parameter(1e-2*torch.randn(1, 1, *input_shape[-2:])) if pos_embed and input_shape != () else None
 
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor) -> torch.Tensor:
+        if self.pe is not None: x += self.pe
         qkv = self.qkv_proj(self.norm(x, cond))                                        # N x 3C x H x W
         qkv = qkv.view(x.shape[0], 3*self.nb_heads, x.shape[1]//self.nb_heads, -1)     # N x 3nb_heads x C//nb_heads x HW
         Q, K, V = (qkv.transpose(-1, -2)).chunk(3, dim=1)                              # N x nb_heads x HW x C//nb_heads each
@@ -98,7 +102,7 @@ class MHSelfAttention2d(CondModule):
 
 class CondUpDownBlock(CondModule):
     def __init__(self,
-                 in_channels: int,
+                 input_shape: tuple[int, int, int],
                  mid_channels: int,
                  out_channels: int,
                  cond_channels: int,
@@ -107,21 +111,22 @@ class CondUpDownBlock(CondModule):
                  self_attention: bool=True,
                  updown_state: State=State.NONE) -> None:
         super().__init__()
+        in_channels = input_shape[0]
         # All the conditioning go into the normalization layers
         self.updown_state = updown_state
         self.layers = nn.ModuleList([])
         mid = mid_channels
 
         # Downsampling/avg pooling to shrink the spatial resolution, not number of channels
-        # TODO: Karras used something else
+        # XXX: Karras used a fixed kernel convolution
         if updown_state == State.DOWN:
             self.layers.append(nn.AvgPool2d(2, 2))
         # Upsampling to increase the spatial resolution. Half also the num. of channels
-        # TODO: Karras used something else
+        # XXX: Karras used a fixed kernel convolution
         elif updown_state == State.UP:
             self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2),
                                              nn.Conv2d(in_channels, in_channels//2, kernel_size=1)))
-            #TODO: check, TODO kernel_size = 3 and add padding of 1
+            # TODO kernel_size = 3 and add padding of 1
 
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
@@ -136,7 +141,9 @@ class CondUpDownBlock(CondModule):
             if self_attention:
                 self.layers.append(MHSelfAttention2d(in_channels=noc,
                                                     nb_heads=nb_heads,
-                                                    norm=norm))
+                                                    norm=norm,
+                                                    pos_embed=True,
+                                                    input_shape=input_shape))
         
     def forward(self,
                 x: torch.Tensor,

@@ -88,13 +88,12 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
     # )
     model = UNet(
         image_channels=info.image_channels,     
+        image_size=info.image_size,
         in_channels=cfg.model.nb_channels,
         min_channels=cfg.model.nb_channels,
         depths=cfg.model.depths,
-        # nb_blocks=cfg.model.num_blocks,                         # nb of down + up blocks together
         cond_channels=cfg.model.cond_channels,
         self_attentions=cfg.model.self_attentions,
-        # start_self_attention=cfg.model.start_self_attention,    # index of starting block that contains MHA layers
         nb_classes=info.num_classes                             # will +1 fake label for CFG
     )
     criterion = nn.MSELoss()

@@ -8,6 +8,7 @@ from .blocks import NoiseEmbedding, LabelEmbedding, CondUpDownBlock, State
 class UNet(nn.Module):
     def __init__(self,
                  image_channels: int,
+                 image_size: int,
                  in_channels: int,
                  min_channels: int,
                  depths: list[int],
@@ -32,29 +33,29 @@ class UNet(nn.Module):
         for i in range(len(depths)+1):  # +1 due to the bridge
             nic = in_channels if i == 0 else mid
             mid = min_channels if i == 0 else nic*2
+            size = image_size if i == 0 else size//2
             updown_state = State.NONE if i == 0 else State.DOWN
             self_attention = self_attentions[i] if i != len(depths) else self_attention_bridge
             idx = min(i, len(depths)-1)
-            down_blocks.append(CondUpDownBlock(in_channels=nic,
+            down_blocks.append(CondUpDownBlock(input_shape=(nic, size, size),
                                                 mid_channels=mid,
                                                 out_channels=mid,
                                                 cond_channels=cond_channels,
                                                 nb_layers=depths[idx],
                                                 self_attention=self_attention,
-                                                #self_attention=i >= start_self_attention,
                                                 updown_state=updown_state))
         for i in range(len(depths)):
             nic = 2*min_channels if i == len(depths)-1 else mid
             mid = in_channels if i == len(depths)-1 else nic//2
+            size = image_size if i == len(depths)-1 else size*2
             idx = len(depths)-i-1
             
-            up_blocks.append(CondUpDownBlock(in_channels=nic,
+            up_blocks.append(CondUpDownBlock(input_shape=(nic, size, size),
                                                 mid_channels=mid,
                                                 out_channels=mid,
                                                 cond_channels=cond_channels,
                                                 nb_layers=depths[idx],
                                                 self_attention=self_attentions[idx],
-                                                #self_attention=i < len(depths)-start_self_attention,
                                                 updown_state=State.UP))
         self.down_blocks = nn.ModuleList(down_blocks)
         self.up_blocks = nn.ModuleList(up_blocks)
