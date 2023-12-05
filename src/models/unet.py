@@ -77,5 +77,5 @@ class UNet(nn.Module):
             skips.append(x)
         x = self.down_blocks[-1](x, cond)
         for skip, block in zip(reversed(skips), self.up_blocks):
-            x = block(x, cond, skip)
+            x = block(x, cond, skip=None)  # ablation of skip connections
         return self.conv_out(x)

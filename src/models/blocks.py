@@ -120,7 +120,7 @@ class CondUpDownBlock(CondModule):
         # TODO: Karras used something else
         elif updown_state == State.UP:
             self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2),
-                                             nn.Conv2d(in_channels, in_channels//2, kernel_size=1)))
+                                             nn.Conv2d(in_channels, in_channels, kernel_size=1)))  # TODO: 3 x 3 kernel and put back in_channels//2 in out_channels
             #TODO: check, TODO kernel_size = 3 and add padding of 1
 
         for i in range(nb_layers):
