@@ -21,8 +21,8 @@ def uncond_method(
         stochastic: bool=False,
         euler_improved: bool=False,
     ) -> tuple[torch.Tensor, ...]:
-    N, S_min, S_max, S_churn, S_noise = sigmas.numel(), 10, 80, 36, 1.003  # 0.05, 80, 36, 1.003
-    # S_noise = 1
+    # N, S_min, S_max, S_churn, S_noise = sigmas.numel(), 0.05, 80, 36, 1  # 1.003
+    S_noise = 1
     if uncond_label: uncond_label = torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
 
     # Track the iterative procedure
@@ -35,7 +35,7 @@ def uncond_method(
         sigma_next = sigmas[i + 1] if i < len(sigmas) - 1 else 0
         
         if stochastic:
-            gamma = min(S_churn/N, np.sqrt(2)-1) if (sigma >= S_min and sigma <= S_max) else 0   # np.sqrt(2)-1  TODO fix this
+            gamma = np.sqrt(2)-1  # min(S_churn/N, np.sqrt(2)-1) if (sigma >= S_min and sigma <= S_max) else 0   # np.sqrt(2)-1  TODO fix this
             sigma_new = sigma + gamma*sigma
             X_noisy = X_noisy + torch.sqrt(sigma_new**2-sigma**2)*torch.randn(X_noisy.shape, device=X_noisy.device)*S_noise  # TODO fix S_noise
 
