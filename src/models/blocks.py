@@ -7,6 +7,31 @@ from typing import Optional, Callable
 
 State = Enum('State', ['UP', 'DOWN', 'NONE'])
 
+# CondModule & CondSequential: Helper classes to make code cleaner
+class CondModule(nn.Module):
+    pass
+
+class CondResSeq(CondModule):
+    def __init__(self,
+                 layers: list[nn.Module],
+                 process: Optional[nn.Module]=None):
+        super().__init__()
+        self.process = process or nn.Identity()
+        self.layers = nn.ModuleList(layers)
+
+    def forward(self,
+                x: torch.Tensor,
+                cond: torch.Tensor,
+                skip: Optional[torch.Tensor]=None) -> torch.Tensor:
+        y = self.process(x)
+        y = y if skip is None else torch.cat([y, skip], dim=1)  # channel-wise
+        for layer in self.layers:
+            if isinstance(layer, CondModule):
+                y = layer(y, cond)
+            else:
+                y = layer(y)
+        return y
+
 class NoiseEmbedding(nn.Module):
     def __init__(self, cond_channels: int) -> None:
         super().__init__()
@@ -28,9 +53,6 @@ class LabelEmbedding(nn.Module):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return self.embedding(input)
-
-class CondModule(nn.Module):
-    pass
 
 class CondBatchNorm2d(CondModule):
     def __init__(self,
@@ -84,7 +106,7 @@ class MHSelfAttention2d(CondModule):
         assert in_channels % nb_heads == 0, "q,k,v emb. dim: in_channels/nb_heads should be an integer"
         self.nb_heads, self.norm = nb_heads, norm(in_channels)
         self.qkv_proj = nn.Conv2d(in_channels, in_channels*3, kernel_size=1)
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # shape unchanged, affine transformation
+        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # out_proj shape unchanged because already correct
         # XXX: Karras set weights and biases of conv to 0 initially
         
         self.pe = nn.Parameter(1e-2*torch.randn(1, 1, *input_shape[-2:])) if pos_embed and input_shape != () else None
@@ -100,7 +122,7 @@ class MHSelfAttention2d(CondModule):
         y = Y.transpose(-1, -2).contiguous().view(*x.shape)                            # N x C x H x W
         return x + self.conv(y)
 
-class CondUpDownBlock(CondModule):
+class CondUpDownBlock(CondResSeq):
     def __init__(self,
                  input_shape: tuple[int, int, int],
                  mid_channels: int,
@@ -110,53 +132,35 @@ class CondUpDownBlock(CondModule):
                  nb_layers: int=1,
                  self_attention: bool=True,
                  updown_state: State=State.NONE) -> None:
-        super().__init__()
-        in_channels = input_shape[0]
         # All the conditioning go into the normalization layers
-        self.updown_state = updown_state
-        self.layers = nn.ModuleList([])
-        mid = mid_channels
+        self.updown_state, self.layers = updown_state, []
+        in_channels, pos_embed = input_shape[0], True
+        mid, process = mid_channels, None
 
-        # Downsampling/avg pooling to shrink the spatial resolution, not number of channels
-        # XXX: Karras used a fixed kernel convolution
+        # Downsampling/avg pooling, nb of channels stay the same
+        # Karras used a conv layer with fixed kernel
         if updown_state == State.DOWN:
-            self.layers.append(nn.AvgPool2d(2, 2))
-        # Upsampling to increase the spatial resolution. Half also the num. of channels
-        # XXX: Karras used a fixed kernel convolution
+            process = nn.AvgPool2d(2, 2)
+        # Upsampling + half the num. of channels via conv.
+        # Karras used a conv layer with fixed kernel
         elif updown_state == State.UP:
-            self.layers.append(nn.Sequential(nn.Upsample(scale_factor=2),
-                                             nn.Conv2d(in_channels, in_channels//2, kernel_size=1)))
+            process = nn.Sequential(nn.Upsample(scale_factor=2),
+                                    nn.Conv2d(in_channels, in_channels//2, kernel_size=1))
             # TODO kernel_size = 3 and add padding of 1
-
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
             noc = out_channels if i == nb_layers-1 else mid
-
-            norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)
+            norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)  # a different BN per layer
             
-            self.layers.append(CondResidualBlock(in_channels=nic,
-                                                 mid_channels=mid,
-                                                 out_channels=noc,
-                                                 cond_channels=cond_channels))
+            self.layers.append(CondResidualBlock(in_channels=nic, mid_channels=mid, out_channels=noc, cond_channels=cond_channels))
             if self_attention:
-                self.layers.append(MHSelfAttention2d(in_channels=noc,
-                                                    nb_heads=nb_heads,
-                                                    norm=norm,
-                                                    pos_embed=True,
-                                                    input_shape=input_shape))
-        
+                self.layers.append(MHSelfAttention2d(in_channels=noc, nb_heads=nb_heads, norm=norm,
+                                                     pos_embed=pos_embed, input_shape=input_shape))
+                if pos_embed: pos_embed = False  # a single 
+        super().__init__(self.layers, process=process)
+
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor,
                 skip: Optional[torch.Tensor]=None) -> torch.Tensor:
-        y = x
-        match self.updown_state:
-            case State.UP | State.DOWN:
-                y = self.layers[0](y)
-                y = y if skip is None else torch.cat([y, skip], dim=1)  # channel-wise
-                for l in self.layers[1:]:
-                    y = l(y, cond)
-            case _:
-                for l in self.layers:
-                    y = l(y, cond)
-        return y
+        return super().forward(x, cond, skip)

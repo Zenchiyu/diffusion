@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from models.resnet import ResNet
 from models.unet import UNet
 from diffusion import Diffusion
 from data import load_dataset_and_make_dataloaders
@@ -79,13 +78,6 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
     # XXX: info.sigma_data is an estimation of the std based on a "huge" batch
 
     ## Model and criterion
-    # model = ResNet(
-    #     image_channels=info.image_channels,     # e.g. 3
-    #     nb_channels=cfg.model.nb_channels,      # nb channels in ResNet, e.g. 64
-    #     num_blocks=cfg.model.num_blocks,        # nb of resblocks, e.g. 10
-    #     cond_channels=cfg.model.cond_channels,  # cond. embed dim, e.g. 8
-    #     num_classes=info.num_classes            # will +1 fake label for CFG
-    # )
     model = UNet(
         image_channels=info.image_channels,     
         image_size=info.image_size,

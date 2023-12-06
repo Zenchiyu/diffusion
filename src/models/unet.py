@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from enum import Enum
 from typing import Optional
 from .blocks import NoiseEmbedding, LabelEmbedding, CondUpDownBlock, State
 
@@ -15,7 +14,6 @@ class UNet(nn.Module):
                  cond_channels: int,
                  self_attentions: bool|list[bool] = True,
                  self_attention_bridge: bool=True,
-                 #start_self_attention: int=0,
                  nb_classes: Optional[int]=None):
         super().__init__()
         assert (len(depths) >= 1)

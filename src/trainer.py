@@ -22,7 +22,7 @@ def trainer(cfg: DictConfig):
     dataset_seed = torch.random.initial_seed()  # retrieve seed used for random_split
     torch.manual_seed(run_seed)                 # reset seed
     nb_params = sum(map(lambda x: x.numel(), model.parameters()))
-    print(f"\nNumber of parameters: {nb_params}")
+    print(f"\nModel: {model}\n\nNumber of parameters: {nb_params}")
 
     if cfg.wandb.mode == "online":
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),

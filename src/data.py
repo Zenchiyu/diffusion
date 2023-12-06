@@ -8,7 +8,7 @@ import torchvision.transforms as T
 
 
 DataInfo = namedtuple('DataInfo', 'image_channels image_size num_classes sigma_data')
-DataLoaders = namedtuple('DataLoaders', 'train valid')
+DataLoaders = namedtuple('DataLoaders', 'train valid test')
 
 
 def load_dataset_and_make_dataloaders(
@@ -19,8 +19,9 @@ def load_dataset_and_make_dataloaders(
         pin_memory: bool = False    
     ) -> Tuple[DataLoaders, DataInfo]:
 
-    train_dataset, valid_dataset, data_info = load_dataset(dataset_name, root_dir)
-    dl = make_dataloaders(train_dataset, valid_dataset, data_info.num_classes, batch_size, num_workers, pin_memory)
+    train_dataset, valid_dataset, test_dataset, data_info = load_dataset(dataset_name, root_dir)
+    dl = make_dataloaders(train_dataset, valid_dataset, test_dataset,
+                          data_info.num_classes, batch_size, num_workers, pin_memory)
     return dl, data_info
 
 
@@ -31,18 +32,21 @@ def load_dataset(dataset_name='FashionMNIST', root_dir='data') -> Tuple[Dataset,
         case 'FashionMNIST':
             t = T.Compose([T.ToTensor(), T.Pad(2), T.Normalize(mean=(0.5,), std=(0.5,))])
             train_dataset = FashionMNIST(root_dir, download=True, transform=t)
+            test_dataset = FashionMNIST(root_dir, download=True, transform=t, train=False)
             train_dataset, valid_dataset = random_split(train_dataset, [50000, 10000])  # both come from the training set
             num_classes = 10
         
         case 'CelebA':
             t = T.Compose([T.ToTensor(), T.CenterCrop(178), T.Resize(128, antialias=True), T.Normalize(mean=(0.5,), std=(0.5,))])
             train_dataset = CelebA(root_dir, download=True, transform=t)
+            test_dataset = CelebA(root_dir, download=True, transform=t, split='test')
             train_dataset, valid_dataset = random_split(train_dataset, [150000, 12770])
             num_classes = None
 
         case 'CIFAR10':
             t = T.Compose([T.ToTensor(), T.Normalize(mean=(0.5,), std=(0.5,))])
             train_dataset = CIFAR10(root_dir, download=True, transform=t)
+            test_dataset = CelebA(root_dir, download=True, transform=t, train=False)
             train_dataset, valid_dataset = random_split(train_dataset, [40000, 10000])
             num_classes = 10
         
@@ -54,12 +58,13 @@ def load_dataset(dataset_name='FashionMNIST', root_dir='data') -> Tuple[Dataset,
     assert h == w
     sigma_data = x.std()
     
-    return train_dataset, valid_dataset, DataInfo(c, h, num_classes, sigma_data)
+    return train_dataset, valid_dataset, test_dataset, DataInfo(c, h, num_classes, sigma_data)
 
 
 def make_dataloaders(
         train_dataset: Dataset,
         valid_dataset: Dataset,
+        test_dataset: Dataset,
         num_classes: Optional[int],
         batch_size: int,
         num_workers: int = 0,
@@ -71,5 +76,6 @@ def make_dataloaders(
     
     return DataLoaders(
         train=DataLoader(train_dataset, batch_size=batch_size, shuffle=True, **kwargs),
-        valid=DataLoader(valid_dataset, batch_size=2 * batch_size, **kwargs)  
+        valid=DataLoader(valid_dataset, batch_size=2 * batch_size, **kwargs),
+        test=DataLoader(test_dataset, batch_size=2 * batch_size, **kwargs)
     )
