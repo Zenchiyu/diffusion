@@ -2,7 +2,8 @@ import hydra
 import torch
 
 from tqdm import tqdm
-from torcheval.metrics import FrechetInceptionDistance
+# from torcheval.metrics import FrechetInceptionDistance
+from torchvision.utils import save_image 
 from init import init
 from omegaconf import DictConfig
 from sampler import sample
@@ -29,10 +30,15 @@ def fid(cfg: DictConfig):
     batch_size = 10
     N, C, H, W = batch_size, info.image_channels, info.image_size, info.image_size
 
-    metric = FrechetInceptionDistance(device=device)
+    # metric = FrechetInceptionDistance(device=device)
+    i = 0
     for (images, _) in dl.test:
-        metric.update(float2tensor(images), is_real=True)
+        for image in images:
+            save_image(float2tensor(image), f"./data/reference/{i}.png")
+            i +=1
+        # metric.update(float2tensor(images), is_real=True)
 
+    i = 0
     for _ in tqdm(range(0, 10_000, batch_size)):  # 50_000
         fake_samples = sample(
                             N, C, H, model, diffusion,
@@ -43,8 +49,11 @@ def fid(cfg: DictConfig):
                             track_inter=False,
                             sampling_method=sampling_method
                             )
-        metric.update(float2tensor(fake_samples), is_real=False)
-    print(f"FID (test): {metric.compute()}")
+        for image in fake_samples:
+            save_image(float2tensor(image), f"./data/generated/{i}.png")
+            i +=1
+        # metric.update(float2tensor(fake_samples), is_real=False)
+    # print(f"FID (test): {metric.compute()}")
     
 if __name__ == "__main__":
     fid()

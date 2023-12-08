@@ -101,7 +101,7 @@ class MHSelfAttention2d(CondModule):
                  nb_heads: int,
                  norm: Callable[[int], nn.Module],
                  pos_embed: bool=False,
-                 input_shape: tuple[int, int, int]=()) -> None:
+                 spatial_shape: tuple[int, int]=()) -> None:
         super().__init__()
         assert in_channels % nb_heads == 0, "q,k,v emb. dim: in_channels/nb_heads should be an integer"
         self.nb_heads, self.norm = nb_heads, norm(in_channels)
@@ -109,12 +109,12 @@ class MHSelfAttention2d(CondModule):
         self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # out_proj shape unchanged because already correct
         # XXX: Karras set weights and biases of conv to 0 initially
         
-        self.pe = nn.Parameter(1e-2*torch.randn(1, 1, *input_shape[-2:])) if pos_embed and input_shape != () else None
+        self.pe = nn.Parameter(1e-2*torch.randn(1, in_channels, *spatial_shape)) if pos_embed and spatial_shape != () else None
 
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor) -> torch.Tensor:
-        if self.pe is not None: x += self.pe
+        if self.pe is not None: x = x + self.pe
         qkv = self.qkv_proj(self.norm(x, cond))                                        # N x 3C x H x W
         qkv = qkv.view(x.shape[0], 3*self.nb_heads, x.shape[1]//self.nb_heads, -1)     # N x 3nb_heads x C//nb_heads x HW
         Q, K, V = (qkv.transpose(-1, -2)).chunk(3, dim=1)                              # N x nb_heads x HW x C//nb_heads each
@@ -134,7 +134,7 @@ class CondUpDownBlock(CondResSeq):
                  updown_state: State=State.NONE) -> None:
         # All the conditioning go into the normalization layers
         self.updown_state, self.layers = updown_state, []
-        in_channels, pos_embed = input_shape[0], True
+        in_channels, spatial_shape, pos_embed = input_shape[0], input_shape[1:], True
         mid, process = mid_channels, None
 
         # Downsampling/avg pooling, nb of channels stay the same
@@ -155,7 +155,7 @@ class CondUpDownBlock(CondResSeq):
             self.layers.append(CondResidualBlock(in_channels=nic, mid_channels=mid, out_channels=noc, cond_channels=cond_channels))
             if self_attention:
                 self.layers.append(MHSelfAttention2d(in_channels=noc, nb_heads=nb_heads, norm=norm,
-                                                     pos_embed=pos_embed, input_shape=input_shape))
+                                                     pos_embed=pos_embed, spatial_shape=spatial_shape))
                 if pos_embed: pos_embed = False  # a single 
         super().__init__(self.layers, process=process)
 
