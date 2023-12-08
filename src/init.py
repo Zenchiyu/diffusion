@@ -79,8 +79,7 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
 
     ## Model and criterion
     model = UNet(
-        image_channels=info.image_channels,     
-        image_size=info.image_size,
+        image_channels=info.image_channels,
         in_channels=cfg.model.nb_channels,
         min_channels=cfg.model.nb_channels,
         depths=cfg.model.depths,
