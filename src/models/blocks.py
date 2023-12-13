@@ -128,23 +128,19 @@ class CondUpDownBlock(CondResSeq):
                  self_attention: bool=True,
                  updown_state: State=State.NONE) -> None:
         # All the conditioning go into the normalization layers
+        # nb_heads is ignored if self_attention is False
         self.updown_state, self.layers = updown_state, []
         mid, process = mid_channels, None
 
-        # Downsampling/avg pooling, nb of channels stay the same
-        # Karras used a conv layer with fixed kernel
-        if updown_state == State.DOWN:
-            process = nn.AvgPool2d(2, 2)
-        # Upsampling + half the num. of channels via conv.
-        # Karras used a conv layer with fixed kernel
-        elif updown_state == State.UP:
-            process = nn.Sequential(nn.Upsample(scale_factor=2),
-                                    nn.Conv2d(in_channels, in_channels//2, kernel_size=1))
-            # TODO kernel_size = 3 and add padding of 1
+        # Down-/up-sampling. Half nb of channels in upsampling
+        # Karras used a conv layer with fixed kernel for both up/down
+        if updown_state == State.DOWN: process = nn.AvgPool2d(2, 2)
+        elif updown_state == State.UP: process = nn.Sequential(nn.Upsample(scale_factor=2),
+                                                               nn.Conv2d(in_channels, in_channels//2, kernel_size=3, padding=1))
         for i in range(nb_layers):
             nic = in_channels if i == 0 else mid
             noc = out_channels if i == nb_layers-1 else mid
-            norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)  # a different BN per layer
+            norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)  # a different norm per layer
             
             self.layers.append(CondResidualBlock(in_channels=nic, mid_channels=mid, out_channels=noc, cond_channels=cond_channels))
             if self_attention:

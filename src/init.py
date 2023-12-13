@@ -80,11 +80,12 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
     ## Model and criterion
     model = UNet(
         image_channels=info.image_channels,
-        in_channels=cfg.model.nb_channels,
-        min_channels=cfg.model.nb_channels,
+        min_channels=cfg.model.min_channels,
         depths=cfg.model.depths,
         cond_channels=cfg.model.cond_channels,
         self_attentions=cfg.model.self_attentions,
+        self_attention_bridge=cfg.model.self_attention_bridge,
+        nb_heads=cfg.model.nb_heads,
         nb_classes=info.num_classes                             # will +1 fake label for CFG
     )
     criterion = nn.MSELoss()

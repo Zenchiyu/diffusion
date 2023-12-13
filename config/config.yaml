@@ -1,7 +1,6 @@
 defaults:
   - _self_
   # Add one of the following right after to use a pre-trained model
-  # after copy-pasting the checkpoint.pth under the correct directory
   # - /cifar10/small_v1@_here_
   # - /fashionmnist/small_v1@_here_
   # - /celeba/small_v1@_here
@@ -14,13 +13,13 @@ wandb:
 wandb_watch: True  # log more info
 
 common:
-  nb_epochs: 100  # 200
+  nb_epochs: 100  # people usually track n° of gradient steps instead
   sampling:
-    method: stochastic_heun # euler  # stochastic_heun  # stochastic (euler), stochastic_heun, null (euler), heun
+    method: stochastic_heun  # stochastic (euler), stochastic_heun, null (euler), heun
     num_steps: 50
     label: null     # class label for Classifier-Free Guidance (CFG)
     cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1
-    save_path: ./src/images/samples.png  # relative to cwd
+    save_path: ./results/images/samples.png  # relative to cwd
   training:
     p_uncond: 0.2  # used to train the uncond. and cond. score function
     chkpt_path: ./checkpoints/checkpoint.pth  # relative to cwd
@@ -42,8 +41,13 @@ dataset:
   num_workers: 0
 
 model:
-  nb_channels: 32  # 64
-  depths: [2, 2, 2, 2]  # bridge has the same 'depth' as depths[-1].
+  min_channels: 64
+  depths: [2, 2, 2, 2]
+  # resolutions: 128 -> 64 -> 32 -> 16. 4 in the bridge.
+  # channels: 64 -> 128 -> 256 -> 512. 1024 in the bridge.
+  # bridge has the same 'depth' as depths[-1].
+  # first resolution level, no downsampling.
   cond_channels: 8
-  self_attentions: [False, False, False, True]
-  # Bridge always has self attention for the moment
+  self_attentions: [False, False, True, True]
+  self_attention_bridge: True  # Bridge always has self attention for the moment
+  nb_heads: [1, 2, 4, 8]
