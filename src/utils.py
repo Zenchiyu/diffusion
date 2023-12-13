@@ -9,10 +9,11 @@ from PIL import Image
 from torchvision.utils import make_grid
 
 def copy_config(run: wandb.sdk.wandb_run.Run,
-                begin_date: str) -> None:
+                begin_date: str,
+                config_name: str="config") -> None:
     path = f'checkpoints/{begin_date}/run_{run.id}'
     os.makedirs(path, exist_ok=True)
-    shutil.copyfile("config/config.yaml", path + "/config.yaml")
+    shutil.copyfile(f"config/{config_name}.yaml", path + "/config.yaml")
 
 def copy_chkpt(run: wandb.sdk.wandb_run.Run,
                begin_date: str,

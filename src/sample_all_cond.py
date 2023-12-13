@@ -32,10 +32,10 @@ def sample_all_cond(cfg: DictConfig):
     cfgscale_str = str(cfg.common.sampling.cfg_scale).replace('.','_')
 
     save(samples.view(info.num_classes, nb_per_class, C, H, W)[:, :10].reshape(-1, C, H, W),
-        f"./src/images/all_{dataset_name}_10_cfgscale_{cfgscale_str}.png",
+        f"./results/images/all_{dataset_name}_10_cfgscale_{cfgscale_str}.png",
         nrow=10, padding=1)
     save(samples,
-        f"./src/images/all_{dataset_name}_90_cfgscale_{cfgscale_str}.png",
+        f"./results/images/all_{dataset_name}_90_cfgscale_{cfgscale_str}.png",
         nrow=30, padding=1)
 
 if __name__ == "__main__":

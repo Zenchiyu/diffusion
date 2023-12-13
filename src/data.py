@@ -46,7 +46,7 @@ def load_dataset(dataset_name='FashionMNIST', root_dir='data') -> Tuple[Dataset,
         case 'CIFAR10':
             t = T.Compose([T.ToTensor(), T.Normalize(mean=(0.5,), std=(0.5,))])
             train_dataset = CIFAR10(root_dir, download=True, transform=t)
-            test_dataset = CelebA(root_dir, download=True, transform=t, train=False)
+            test_dataset = CIFAR10(root_dir, download=True, transform=t, train=False)
             train_dataset, valid_dataset = random_split(train_dataset, [40000, 10000])
             num_classes = 10
         

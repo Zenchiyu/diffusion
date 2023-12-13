@@ -133,9 +133,9 @@ def sampler(cfg: DictConfig):
         )
     dataset_name = str.lower(cfg.dataset.name)
 
-    save(samples, f"./src/images/uncond_samples_{dataset_name}_16.png")
+    save(samples, f"./results/images/uncond_samples_{dataset_name}_16.png")
     # Save intermediate generation steps for the first generated picture
-    save(samples_inter[:, 0].view(-1, C, H, W), f"./src/images/iterative_denoising_process_{dataset_name}.png")
+    save(samples_inter[:, 0].view(-1, C, H, W), f"./results/images/iterative_denoising_process_{dataset_name}.png")
     
 
 if __name__ == "__main__":

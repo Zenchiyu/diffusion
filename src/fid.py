@@ -16,7 +16,7 @@ def fid(cfg: DictConfig):
 
     # Initialization
     init_tuple = init(cfg)
-    model, diffusion, info, device, dl = init_tuple.model, init_tuple.diffusion, init_tuple.info, init_tuple.device, init_tuple.dl
+    model, diffusion, info, dl = init_tuple.model, init_tuple.diffusion, init_tuple.info, init_tuple.dl
 
     # Don't use the checkpoint seed for sampling
     torch.manual_seed(seed)
@@ -39,7 +39,7 @@ def fid(cfg: DictConfig):
         # metric.update(float2tensor(images), is_real=True)
 
     i = 0
-    for _ in tqdm(range(0, 10_000, batch_size)):  # 50_000
+    for _ in tqdm(range(0, 10_000, batch_size)):  # literature: on 50_000 train images instead of test
         fake_samples = sample(
                             N, C, H, model, diffusion,
                             uncond_label=info.num_classes,
