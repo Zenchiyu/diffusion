@@ -9,7 +9,7 @@ from sampler import sample
 
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
-def sampler(cfg: DictConfig):
+def sample_all_cond(cfg: DictConfig):
     seed = torch.random.initial_seed()  # retrieve current seed
 
     # Initialization
@@ -39,4 +39,4 @@ def sampler(cfg: DictConfig):
         nrow=30, padding=1)
 
 if __name__ == "__main__":
-    sampler()
+    sample_all_cond()

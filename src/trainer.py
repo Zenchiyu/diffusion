@@ -78,6 +78,7 @@ def trainer(cfg: DictConfig):
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                     "acc_losses": acc_losses,
+                    "avg_losses": acc_losses/len(dl.train),
                     "seed": dataset_seed,
                     "begin_date": begin_date},
                     chkpt_path)
@@ -85,6 +86,7 @@ def trainer(cfg: DictConfig):
         if cfg.wandb.mode == "online":
             wandb.log({"epoch": e,
                        "acc_loss": acc_loss,
+                       "avg_loss": acc_loss/len(dl.train),
                        "samples": wandb.Image(str(save_path))})
             copy_chkpt(run, begin_date, chkpt_path)
     
