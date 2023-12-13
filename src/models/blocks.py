@@ -14,7 +14,7 @@ class CondModule(nn.Module):
 class CondResSeq(CondModule):
     def __init__(self,
                  layers: list[nn.Module],
-                 process: Optional[nn.Module]=None):
+                 process: Optional[nn.Module]=None) -> None:
         super().__init__()
         self.process = process or nn.Identity()
         self.layers = nn.ModuleList(layers)
@@ -66,8 +66,8 @@ class CondBatchNorm2d(CondModule):
                 x: torch.Tensor,
                 cond: torch.Tensor) -> torch.Tensor:
         gamma, beta = self.bn_params(cond)[:, :, None, None].chunk(2, dim=1)  # N x C x 1 x 1 each
-        return beta+gamma*self.norm(x)
-    
+        return beta + gamma*self.norm(x)
+ 
 class CondResidualBlock(CondModule):
     def __init__(self,
                  in_channels: int,
@@ -114,7 +114,7 @@ class MHSelfAttention2d(CondModule):
         qkv = qkv.view(x.shape[0], 3*self.nb_heads, x.shape[1]//self.nb_heads, -1)     # N x 3nb_heads x C//nb_heads x HW
         Q, K, V = (qkv.transpose(-1, -2)).chunk(3, dim=1)                              # N x nb_heads x HW x C//nb_heads each
         Y = F.scaled_dot_product_attention(Q, K, V)                                    # N x nb_heads x HW x C//nb_heads
-        y = Y.transpose(-1, -2).contiguous().view(*x.shape)                            # N x C x H x W
+        y = Y.transpose(-1, -2).reshape(*x.shape)                                      # N x C x H x W
         return x + self.conv(y)
 
 class CondUpDownBlock(CondResSeq):
