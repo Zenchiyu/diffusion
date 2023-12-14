@@ -11,16 +11,16 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 |:--:| :--:|
 | *Randomly generated faces* | *An iterative denoising process* |
 
-### Conditional with Classifier-Free Guidance
+### Conditional generation with Classifier-Free Guidance
 
-**FashionMNIST and CIFAR-10 epoch 200, euler, 2M parameters U-Net model:**
+**FashionMNIST and CIFAR-10 epoch 100, Euler, 5M parameters U-Net model:**
 
-| <img src="src/images/euler/all_fashionmnist_10.png" width=500> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=500> |
+| <img src="results/images/fashionmnist/euler/cond_10_cfgscale_1.png" width=500> | <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5.png" width=500> |
 |:--:| :--:|
-| <img src="src/images/euler/all_fashionmnist_90.png" width=500> | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=500> |
+| <img src="results/images/fashionmnist/euler/cond_90_cfgscale_1.png" width=500> | <img src="results/images/cifar10/euler/cond_90_cfgscale_2_5.png" width=500> |
 | *FashionMNIST cfg.scale=1, Euler method* | *CIFAR-10 cfg.scale=2.5, Euler method* |
 
-**Cherry-picked generated horse (cfg.scale=2.5):**
+**Cherry-picked generated horse (cfg.scale=2.5) (Work in Progress):**
 <p align="center">
 <img src="src/images/euler/horse_cherrypicked_cfgscale_2_5.png" width=500>
 </p>
@@ -44,10 +44,10 @@ python src/trainer.py
 python src/sampler.py
 ```
 
-- Classifier-Free Guidance (CFG) for a single class
+- Conditional generation with Classifier-Free Guidance (CFG) for a single class
 
 ```bash
-python src/sampler.py common.sampling.label=<class-id> common.sampling.cfg_scale=1
+python src/sampler.py common.sampling.label=<class-id> common.sampling.cfg_scale=<cfg-scale>
 ```
 
 - Classifier-Free Guidance (CFG) for all classes
@@ -56,8 +56,9 @@ python src/sampler.py common.sampling.label=<class-id> common.sampling.cfg_scale
 python src/sampler_all.py common.sampling.cfg_scale=1
 ```
 
+You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can be either `euler`, `heun` or `stochastic_heun`.
 
-# Tests
+# Tests (Work in Progress)
 
 - No code coverage report
 
@@ -79,7 +80,7 @@ python -m coverage report --omit=*python3*
 
 ## Practical
 
-- Bigger network for more capacity. Going from 2M to 33M parameters: randomly positioned eyes (and more than $2$) to recognizable faces (probably thanks to the Multi-head self-attention layers and bigger receptive fields!)
+- Bigger network for more capacity. Going from 2M to 33M parameters (or more): randomly positioned eyes (and more than $2$) to recognizable faces (probably thanks to the Multi-head self-attention layers and bigger receptive fields!)
 - Trade-off between the number of parameters and batch size for higher resolution images due to VRAM limits.
 - We have to place the Multi-head self-attention layers in lower spatial resolution due to the quadratic complexity in attention. A spatial resolution $32^2=32 \times 32$ or $16^2 = 16 \times 16$ is intuitively enough to capture the long-range contextual information/dependencies and costs way less than a spatial resolution of $128^2$. On the other hand convolution layers, at both high and low spatial resolution, fix "local" inconsistencies (up to the receptive field size).
 - TODO: ablation of Multi-head self-attention and more heads as we go in lower resolution latent representations
