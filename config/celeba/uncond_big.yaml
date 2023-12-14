@@ -2,25 +2,25 @@ common:
   nb_epochs: 100
   training:
     p_uncond: 0.2
-    chkpt_path: ./checkpoints/2023-12-13/run_cd7361sa/checkpoint.pth
+    chkpt_path: ./checkpoints/checkpoint_celeba.pth
 
 dataset:
-  name: FashionMNIST  # FashionMNIST, CIFAR10, CelebA
+  name: CelebA  # FashionMNIST, CIFAR10, CelebA
   root_dir: ./data  # relative to cwd
   batch_size: 32
   num_workers: 0
 
 model:
   min_channels: 64
-  depths: [2, 2]
-  # resolutions: 32 -> 16. 4 in the bridge.
-  # channels: 64 -> 128. 256 in the bridge.
+  depths: [2, 2, 2, 2]
+  # resolutions: 128 -> 64 -> 32 -> 16. 4 in the bridge.
+  # channels: 64 -> 128 -> 256 -> 512. 1024 in the bridge.
   # bridge has the same 'depth' as depths[-1].
   # first resolution level, no downsampling.
   cond_channels: 8
-  self_attentions: [True, True]
+  self_attentions: [False, False, True, True]
   self_attention_bridge: True
-  nb_heads: [4, 4]
+  nb_heads: [1, 2, 4, 8]
 
 optim:  # Adam optimizer
   lr: 1e-4

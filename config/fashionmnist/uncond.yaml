@@ -1,4 +1,5 @@
 common:
+  nb_epochs: 100
   training:
     p_uncond: 1
     chkpt_path: ./checkpoints/2023-12-14/run_obsni1b4/checkpoint.pth

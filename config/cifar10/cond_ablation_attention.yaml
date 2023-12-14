@@ -1,4 +1,5 @@
 common:
+  nb_epochs: 200
   training:
     p_uncond: 0.2
     chkpt_path: ./checkpoints/2023-12-13/run_2556lzwg/checkpoint.pth

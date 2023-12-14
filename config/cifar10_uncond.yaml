@@ -1,10 +1,17 @@
 defaults:
   - _self_
   # Add one of the following right after to use a pre-trained model
-  # - /cifar10/small_v1@_here_
-  # - /fashionmnist/small_v1@_here_
-  # - /celeba/small_v1@_here
-  # - /celeba/big_v1@_here
+  # - /cifar10/cond@_here_
+  # - /cifar10/cond_ablation_attention@_here_
+  # - /cifar10/uncond@_here_
+
+  # - /fashionmnist/cond@_here_
+  # - /fashionmnist/cond_ablation_attention@_here_
+  # - /fashionmnist/uncond@_here_
+
+  # - /celeba/uncond_big@_here_
+  # - /celeba/uncond_small@_here_
+  # - /celeba/uncond_tiny@_here_
 
 wandb:
   project: diffusion
@@ -13,16 +20,16 @@ wandb:
 wandb_watch: True  # log more info
 
 common:
-  nb_epochs: 100  # people usually track n° of gradient steps instead
+  nb_epochs: 200  # people usually track n° of gradient steps instead
   sampling:
-    method: euler  # stochastic_heun (stochastic), null (euler), heun
+    method: euler  # stochastic (euler), stochastic_heun, null (euler), heun
     num_steps: 50
     label: null     # class label for Classifier-Free Guidance (CFG)
     cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1
-    save_path: ./results/images/samples_cifar10.png  # relative to cwd
+    save_path: ./results/images/samples_cifar10_uncond.png  # relative to cwd
   training:
-    p_uncond: 0.2  # used to train the uncond. and cond. score function
-    chkpt_path: ./checkpoints/checkpoint_cifar10.pth  # relative to cwd
+    p_uncond: 1  # used to train the uncond. and cond. score function
+    chkpt_path: ./checkpoints/checkpoint_cifar10_uncond.pth  # relative to cwd
   # CFG is ignored when dataset has no labels
   # and the model is only trained uncond. (but still conditioned on noise)
 

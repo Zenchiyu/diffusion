@@ -1,10 +1,17 @@
 defaults:
   - _self_
   # Add one of the following right after to use a pre-trained model
-  # - /cifar10/small_v1@_here_
-  # - /fashionmnist/small_v1@_here_
-  # - /celeba/small_v1@_here
-  # - /celeba/big_v1@_here
+  # - /cifar10/cond@_here_
+  # - /cifar10/cond_ablation_attention@_here_
+  # - /cifar10/uncond@_here_
+
+  # - /fashionmnist/cond@_here_
+  # - /fashionmnist/cond_ablation_attention@_here_
+  # - /fashionmnist/uncond@_here_
+
+  # - /celeba/uncond_big@_here_
+  # - /celeba/uncond_small@_here_
+  # - /celeba/uncond_tiny@_here_
 
 wandb:
   project: diffusion
@@ -19,10 +26,10 @@ common:
     num_steps: 50
     label: null     # class label for Classifier-Free Guidance (CFG)
     cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1
-    save_path: ./results/images/samples_cifar10_ablation_attention.png  # relative to cwd
+    save_path: ./results/images/samples_fashionmnist_uncond.png  # relative to cwd
   training:
-    p_uncond: 0.2  # used to train the uncond. and cond. score function
-    chkpt_path: ./checkpoints/checkpoint_cifar10_ablation_attention.pth  # relative to cwd
+    p_uncond: 1  # used to train the uncond. and cond. score function
+    chkpt_path: ./checkpoints/checkpoint_fashionmnist_uncond.pth  # relative to cwd
   # CFG is ignored when dataset has no labels
   # and the model is only trained uncond. (but still conditioned on noise)
 
@@ -35,7 +42,7 @@ optim:  # Adam optimizer
 
 # I usually change these below:
 dataset:
-  name: CIFAR10  # FashionMNIST, CIFAR10, CelebA
+  name: FashionMNIST  # FashionMNIST, CIFAR10, CelebA
   root_dir: ./data  # relative to cwd
   batch_size: 32
   num_workers: 0
@@ -48,6 +55,6 @@ model:
   # bridge has the same 'depth' as depths[-1].
   # first resolution level, no downsampling.
   cond_channels: 8
-  self_attentions: [False, False]
-  self_attention_bridge: False
-  nb_heads: [0, 0]
+  self_attentions: [True, True]
+  self_attention_bridge: True
+  nb_heads: [4, 4]
