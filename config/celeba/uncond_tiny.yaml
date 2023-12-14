@@ -7,12 +7,12 @@ common:
 dataset:
   name: CelebA  # FashionMNIST, CIFAR10, CelebA
   root_dir: ./data  # relative to cwd
-  batch_size: 32
+  batch_size: 64
   num_workers: 0
 
 model:
   min_channels: 64
-  depths: [2, 2, 4]
+  depths: [1, 2, 4]
   # resolutions: 128 -> 64 -> 32. 16 in the bridge.
   # channels: 64 -> 128 -> 256. 512 in the bridge.
   # bridge has the same 'depth' as depths[-1].
