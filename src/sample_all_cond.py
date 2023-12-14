@@ -2,25 +2,12 @@ import hydra
 import torch
 
 from init import init
-from sampler import sample as sample_helper
+from sampler import sample_chunked as sample
 from utils import save
 
 from omegaconf import DictConfig
 from pathlib import Path
-from typing import Optional
 
-
-def sample(nb_chunks=2, **kwargs) -> torch.Tensor:
-    assert kwargs["num_samples"] % nb_chunks == 0,\
-        "num_samples should be a multiple of the number of chunks"
-    num_samples = kwargs["num_samples"]//nb_chunks
-    label = kwargs.get("label", None)
-    chunked_labels = label.chunk(nb_chunks) if label is not None else num_samples*[None]
-    
-    def new_kwargs(label: Optional[torch.Tensor]=None) -> torch.Tensor:
-        return kwargs| {"num_samples": num_samples, "label": label}
-    
-    return torch.cat([sample_helper(**new_kwargs(label)) for label in chunked_labels], dim=0)
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sample_all_cond(cfg: DictConfig):

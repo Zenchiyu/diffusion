@@ -50,6 +50,18 @@ def sampling_process(
         X_inter[i+1] = X_noisy
     return X_noisy, X_inter
 
+def sample_chunked(nb_chunks=2, **kwargs) -> torch.Tensor:
+    assert kwargs["num_samples"] % nb_chunks == 0,\
+        "num_samples should be a multiple of the number of chunks"
+    num_samples = kwargs["num_samples"]//nb_chunks
+    label = kwargs.get("label", None)
+    chunked_labels = label.chunk(nb_chunks) if label is not None else num_samples*[None]
+    
+    def new_kwargs(label: Optional[torch.Tensor]=None) -> torch.Tensor:
+        return kwargs| {"num_samples": num_samples, "label": label}
+    
+    return torch.cat([sample(**new_kwargs(label)) for label in chunked_labels], dim=0)
+
 @torch.no_grad()
 def sample(
         num_samples: int,
