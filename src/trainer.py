@@ -6,9 +6,9 @@ from init import init
 from sampler import sample
 from utils import copy_config, copy_chkpt, save
 
-from tqdm import tqdm
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
-
+from tqdm import tqdm
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def trainer(cfg: DictConfig):
@@ -22,17 +22,17 @@ def trainer(cfg: DictConfig):
     dataset_seed = torch.random.initial_seed()  # retrieve seed used for random_split
     torch.manual_seed(run_seed)                 # reset seed
     nb_params = sum(map(lambda x: x.numel(), model.parameters()))
-    print(f"\nNumber of parameters: {nb_params}")
+    print(f"\nModel: {model}\n\nNumber of parameters: {nb_params}")
 
     if cfg.wandb.mode == "online":
         run = wandb.init(config=OmegaConf.to_container(cfg, resolve=True),
                          **cfg.wandb)
         run.watch(model, criterion, log="all", log_graph=True)
         run.summary["nb_params"] = nb_params
-        copy_config(run, begin_date=begin_date)
+        copy_config(run, begin_date=begin_date, config_name=HydraConfig.get()["job"]["config_name"])
 
     # Training
-    acc_losses = []
+    avg_losses = []
     for e in tqdm(range(nb_epochs_finished, cfg.common.nb_epochs)):
         acc_loss = 0
         for X, y in dl.train:
@@ -63,7 +63,7 @@ def trainer(cfg: DictConfig):
 
             acc_loss += loss.item()
 
-        acc_losses.append(acc_loss)
+        avg_losses.append(acc_loss/len(dl.train))
         # Unconditional generation (label is None)
         samples = sample(num_samples=8,
                          image_channels=info.image_channels,
@@ -77,7 +77,7 @@ def trainer(cfg: DictConfig):
         torch.save({"nb_epochs_finished": e+1,
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
-                    "acc_losses": acc_losses,
+                    "avg_losses": avg_losses,
                     "seed": dataset_seed,
                     "begin_date": begin_date},
                     chkpt_path)
@@ -85,6 +85,7 @@ def trainer(cfg: DictConfig):
         if cfg.wandb.mode == "online":
             wandb.log({"epoch": e,
                        "acc_loss": acc_loss,
+                       "avg_loss": avg_losses[-1],
                        "samples": wandb.Image(str(save_path))})
             copy_chkpt(run, begin_date, chkpt_path)
     
