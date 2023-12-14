@@ -45,7 +45,7 @@ dataset:
   name: CelebA  # FashionMNIST, CIFAR10, CelebA
   root_dir: ./data  # relative to cwd
   batch_size: 32
-  num_workers: 0
+  num_workers: 4
 
 model:
   min_channels: 64
