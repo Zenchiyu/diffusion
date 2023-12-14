@@ -7,6 +7,7 @@ from init import init
 from utils import save
 
 from omegaconf import DictConfig
+from pathlib import Path
 from typing import Optional, Callable
 
 
@@ -76,8 +77,8 @@ def sample(
     X_noisy = torch.randn(num_samples, image_channels,
                         image_size, image_size,
                         device=diffusion.device) * sigmas[0]
-    if label: label = torch.tensor(label, device=X_noisy.device).expand(X_noisy.shape[0])
-    if uncond_label: uncond_label = torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
+    if label is not None: label = torch.tensor(label, device=X_noisy.device).expand(X_noisy.shape[0])
+    if uncond_label is not None: uncond_label = torch.tensor(uncond_label, device=X_noisy.device).expand(X_noisy.shape[0])
 
     if label is None or uncond_label is None:
         derivative = lambda x, sigma: (x - D(x, expand(sigma, x.shape[0]), uncond_label)) / sigma
@@ -112,15 +113,17 @@ def sampler(cfg: DictConfig):
     # Initialization
     init_tuple = init(cfg)
     model, diffusion, info = init_tuple.model, init_tuple.diffusion, init_tuple.info
-
-    # Don't use the checkpoint seed for sampling
-    torch.manual_seed(seed)
-
-    # Sample and display
     try:
         sampling_method = cfg.common.sampling.method
     except:
         sampling_method = "euler"
+    dataset_name = str.lower(cfg.dataset.name)
+    path = Path(f"./results/images/{dataset_name}/{sampling_method}/")
+    
+    # Don't use the checkpoint seed for sampling
+    torch.manual_seed(seed)
+
+    # Sample and display
     N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
     samples, samples_inter = sample(
             N, C, H, model, diffusion,
@@ -131,12 +134,10 @@ def sampler(cfg: DictConfig):
             track_inter=True,
             sampling_method=sampling_method
         )
-    dataset_name = str.lower(cfg.dataset.name)
 
-    save(samples, f"./results/images/uncond_samples_{dataset_name}_16.png")
+    save(samples, path / f"uncond_{N}.png")
     # Save intermediate generation steps for the first generated picture
-    save(samples_inter[:, 0].view(-1, C, H, W), f"./results/images/iterative_denoising_process_{dataset_name}.png")
+    save(samples_inter[:, 0].view(-1, C, H, W), path / f"iterative_denoising_process.png")
     
-
 if __name__ == "__main__":
     sampler()
