@@ -15,7 +15,7 @@ wandb_watch: True  # log more info
 common:
   nb_epochs: 100  # people usually track n° of gradient steps instead
   sampling:
-    method: euler  # stochastic (euler), stochastic_heun, null (euler), heun
+    method: euler  # stochastic_heun (stochastic), null (euler), heun
     num_steps: 50
     label: null     # class label for Classifier-Free Guidance (CFG)
     cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1

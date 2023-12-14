@@ -1,10 +1,13 @@
 defaults:
   - _self_
   # Add one of the following right after to use a pre-trained model
-  # - /cifar10/small_v1@_here_
-  # - /fashionmnist/small_v1@_here_
-  # - /celeba/small_v1@_here
-  # - /celeba/big_v1@_here
+  # - /cifar10/cond@_here_
+  # - /cifar10/cond_ablation_attention@_here_
+  # - /cifar10/uncond@_here_
+
+  # - /fashionmnist/cond@_here_
+  # - /fashionmnist/cond_ablation_attention@_here_
+  # - /fashionmnist/uncond@_here_
 
 wandb:
   project: diffusion
@@ -15,7 +18,7 @@ wandb_watch: True  # log more info
 common:
   nb_epochs: 100  # people usually track n° of gradient steps instead
   sampling:
-    method: stochastic_heun  # stochastic (euler), stochastic_heun, null (euler), heun
+    method: stochastic_heun  # stochastic_heun (stochastic), null (euler), heun
     num_steps: 50
     label: null     # class label for Classifier-Free Guidance (CFG)
     cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1
