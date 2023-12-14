@@ -1,7 +1,7 @@
 common:
   training:
     p_uncond: 0.2
-    chkpt_path: ./checkpoints/2023-12-13/run_2afztznb/checkpoint.pth  # relative to cwd
+    chkpt_path: ./checkpoints/2023-12-13/run_2afztznb/checkpoint.pth
 
 dataset:
   name: FashionMNIST  # FashionMNIST, CIFAR10, CelebA
