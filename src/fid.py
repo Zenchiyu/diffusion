@@ -42,7 +42,7 @@ def compute_fid(cfg: DictConfig):
     except:
         sampling_method = "euler"
     batch_size = 10
-    num_gen = 10_000  # literature: on 50_000 generated images
+    num_gen = 50_000  # literature: on 50_000 generated images
     N, C, H, W = batch_size, info.image_channels, info.image_size, info.image_size
 
     ref_paths, gen_path, fid_path = create_directories(cfg.dataset.name, sampling_method, num_gen)
