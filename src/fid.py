@@ -45,7 +45,7 @@ def compute_fid(cfg: DictConfig):
 
     # Sample and display
     batch_size = 10
-    num_gen = 10_000  # literature: on 50_000 generated images
+    num_gen = 50_000  # literature: on 50_000 generated images
     N, C, H, W = batch_size, info.image_channels, info.image_size, info.image_size
 
     # Don't save again the images from the test set.
@@ -75,7 +75,7 @@ def compute_fid(cfg: DictConfig):
     
     score = fid.compute_fid(str(gen_path), str(ref_path))
     print(f"FID: {score}")
-    with open(str(fid_path / "fid.txt"), 'w') as f:
+    with open(str(fid_path / f"uncond_fid_{num_gen}.txt"), 'w') as f:
         print(f"FID: {score}", file=f)
 
 
