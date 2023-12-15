@@ -16,7 +16,7 @@ from utils import float2tensor
 def create_directories(
         dataset_name: str,
         sampling_method: str,
-        num_gen: str
+        num_gen: int
     ) -> tuple[list[Path], Path, Path]:
     """
     Create directories for saving images and fids.
@@ -45,7 +45,7 @@ def compute_fid(cfg: DictConfig):
     num_gen = 10_000  # literature: on 50_000 generated images
     N, C, H, W = batch_size, info.image_channels, info.image_size, info.image_size
 
-    ref_paths, gen_path, fid_path = create_directories(num_gen, cfg.dataset.name, sampling_method)
+    ref_paths, gen_path, fid_path = create_directories(cfg.dataset.name, sampling_method, num_gen)
 
     # Don't use the checkpoint seed for sampling
     torch.manual_seed(seed)
