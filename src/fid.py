@@ -22,7 +22,7 @@ def create_image_directories(dataset_name: str) -> tuple[Path, Path]:
     return gen_path, ref_path
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
-def fid(cfg: DictConfig):
+def compute_fid(cfg: DictConfig):
     seed = torch.random.initial_seed()  # retrieve current seed
 
     # Initialization
@@ -69,4 +69,4 @@ def fid(cfg: DictConfig):
 
 
 if __name__ == "__main__":
-    fid()
+    compute_fid()
