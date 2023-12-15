@@ -8,7 +8,7 @@ from tqdm import tqdm
 from torchvision.utils import save_image 
 
 from data import DataLoaders
-from init import init
+from init import init_sampling
 from sampler import sample
 from utils import float2tensor
 
@@ -32,23 +32,14 @@ def create_directories(
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def compute_fid(cfg: DictConfig):
-    seed = torch.random.initial_seed()  # retrieve current seed
+    model, diffusion, info, dl, sampling_method, _, cfgscale_str = init_sampling(cfg)
 
-    # Initialization
-    init_tuple = init(cfg)
-    model, diffusion, info, dl = init_tuple.model, init_tuple.diffusion, init_tuple.info, init_tuple.dl
-    try:
-        sampling_method = cfg.common.sampling.method
-    except:
-        sampling_method = "euler"
     batch_size = 10
     num_gen = 50_000  # literature: on 50_000 generated images
     N, C, H, W = batch_size, info.image_channels, info.image_size, info.image_size
 
     ref_paths, gen_path, fid_path = create_directories(cfg.dataset.name, sampling_method, num_gen)
 
-    # Don't use the checkpoint seed for sampling
-    torch.manual_seed(seed)
 
     # Reference sets
     for ref_path, dataloader, split in zip(ref_paths, dl, DataLoaders._fields):

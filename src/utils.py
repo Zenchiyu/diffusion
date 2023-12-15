@@ -46,6 +46,5 @@ def save(x: torch.Tensor,
     x = Image.fromarray(x.permute(1, 2, 0).cpu().numpy())
     x.save(save_path)
 
-def save_individually(x: torch.Tensor,
-                      save_path: str) -> None:
-    x.save(save_path)
+def expand(sigma: torch.Tensor, num: int) -> torch.Tensor:
+    return sigma.expand(num)

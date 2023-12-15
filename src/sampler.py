@@ -3,16 +3,12 @@ import numpy as np
 import torch
 
 from diffusion import Diffusion
-from init import init
-from utils import save
+from init import init_sampling
+from utils import save, expand
 
 from omegaconf import DictConfig
-from pathlib import Path
 from typing import Optional, Callable
 
-
-def expand(sigma: torch.Tensor, num: int) -> torch.Tensor:
-    return sigma.expand(num)
 
 def sampling_process(
         X_noisy: torch.Tensor,
@@ -120,20 +116,7 @@ def sample(
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
-    seed = torch.random.initial_seed()  # retrieve current seed
-
-    # Initialization
-    init_tuple = init(cfg)
-    model, diffusion, info = init_tuple.model, init_tuple.diffusion, init_tuple.info
-    try:
-        sampling_method = cfg.common.sampling.method
-    except:
-        sampling_method = "euler"
-    dataset_name = str.lower(cfg.dataset.name)
-    path = Path(f"./results/images/{dataset_name}/{sampling_method}/")
-    
-    # Don't use the checkpoint seed for sampling
-    torch.manual_seed(seed)
+    model, diffusion, info, _, sampling_method, path, _ = init_sampling(cfg)
 
     # Sample and display
     N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
