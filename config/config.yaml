@@ -12,6 +12,7 @@ defaults:
   # - /celeba/uncond_big@_here_
   # - /celeba/uncond_small@_here_
   # - /celeba/uncond_tiny@_here_
+  # - /celeba/uncond_tiny_ablation_attention@_here_
 
 wandb:
   project: diffusion
