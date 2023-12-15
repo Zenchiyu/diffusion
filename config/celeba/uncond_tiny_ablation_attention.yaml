@@ -1,0 +1,26 @@
+common:
+  nb_epochs: 100
+  training:
+    p_uncond: 0.2
+    chkpt_path: ./checkpoints/checkpoint_celeba_uncond_tiny_ablation_attention.pth  # relative to cwd
+
+dataset:
+  name: CelebA  # FashionMNIST, CIFAR10, CelebA
+  root_dir: ./data  # relative to cwd
+  batch_size: 64
+  num_workers: 4
+
+model:
+  min_channels: 64
+  depths: [1, 2, 4]
+  # resolutions: 128 -> 64 -> 32. 16 in the bridge.
+  # channels: 64 -> 128 -> 256. 512 in the bridge.
+  # bridge has the same 'depth' as depths[-1].
+  # first resolution level, no downsampling.
+  cond_channels: 8
+  self_attentions: [False, False, False]
+  self_attention_bridge: False
+  nb_heads: [0, 0, 4]  # twice the num. of heads than before 
+
+optim:  # Adam optimizer
+  lr: 1e-4

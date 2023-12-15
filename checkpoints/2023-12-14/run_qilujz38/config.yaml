@@ -1,0 +1,60 @@
+defaults:
+  - _self_
+  # Add one of the following right after to use a pre-trained model
+  # - /cifar10/cond@_here_
+  # - /cifar10/cond_ablation_attention@_here_
+  # - /cifar10/uncond@_here_
+
+  # - /fashionmnist/cond@_here_
+  # - /fashionmnist/cond_ablation_attention@_here_
+  # - /fashionmnist/uncond@_here_
+
+  # - /celeba/uncond_big@_here_
+  # - /celeba/uncond_small@_here_
+  # - /celeba/uncond_tiny@_here_
+
+wandb:
+  project: diffusion
+  mode: online
+
+wandb_watch: True  # log more info
+
+common:
+  nb_epochs: 200  # people usually track n° of gradient steps instead
+  sampling:
+    method: euler  # stochastic (euler), stochastic_heun, null (euler), heun
+    num_steps: 50
+    label: null     # class label for Classifier-Free Guidance (CFG)
+    cfg_scale: 0    # = 0 for uncond., > 0 for CFG, in practice people use > 1
+    save_path: ./results/images/samples_cifar10_uncond.png  # relative to cwd
+  training:
+    p_uncond: 1  # used to train the uncond. and cond. score function
+    chkpt_path: ./checkpoints/checkpoint_cifar10_uncond.pth  # relative to cwd
+  # CFG is ignored when dataset has no labels
+  # and the model is only trained uncond. (but still conditioned on noise)
+
+diffusion:
+  sigma_min: 2e-3
+  sigma_max: 80
+
+optim:  # Adam optimizer
+  lr: 1e-4
+
+# I usually change these below:
+dataset:
+  name: CIFAR10  # FashionMNIST, CIFAR10, CelebA
+  root_dir: ./data  # relative to cwd
+  batch_size: 32
+  num_workers: 0
+
+model:
+  min_channels: 64
+  depths: [2, 2]
+  # resolutions: 32 -> 16. 4 in the bridge.
+  # channels: 64 -> 128. 256 in the bridge.
+  # bridge has the same 'depth' as depths[-1].
+  # first resolution level, no downsampling.
+  cond_channels: 8
+  self_attentions: [True, True]
+  self_attention_bridge: True
+  nb_heads: [4, 4]
