@@ -2,7 +2,7 @@ common:
   nb_epochs: 200
   training:
     p_uncond: 1
-    chkpt_path: ./checkpoints/2023-12-14/run_kfpcatza/checkpoint.pth
+    chkpt_path: ./checkpoints/2023-12-14/run_qilujz38/checkpoint.pth
 
 dataset:
   name: CIFAR10  # FashionMNIST, CIFAR10, CelebA
