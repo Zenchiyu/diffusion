@@ -1,6 +1,6 @@
 # Results and discussion
 
-You can explore the rest of our generated samples in `./results/images`.
+You can explore the rest of our generated samples in `./images`.
 
 ## Important remark(s)
 - Models are not currently trained and evaluated on the same train and validation sets due to `random_split`. However, FIDs are computed on same train and validation sets. Therefore, one shouldn't give conclusions based on them (where we write a "*").
