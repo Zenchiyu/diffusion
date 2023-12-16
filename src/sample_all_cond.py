@@ -27,7 +27,7 @@ def sample_all_cond(cfg: DictConfig):
         "num_steps": cfg.common.sampling.num_steps,
         "sampling_method": sampling_method,
     }
-    samples = sample(**kwargs)  # nb_chunks > 1 if memory issues.
+    samples = sample(nb_chunks=nb_per_class, **kwargs)  # nb_chunks > 1 if memory issues.
 
     save(samples.view(info.num_classes, nb_per_class, C, H, W)[:, :10].reshape(-1, C, H, W),
          path / f"cond_10_cfgscale_{cfgscale_str}.png", nrow=10, padding=1)
