@@ -16,6 +16,8 @@ from typing import Any
 Init = namedtuple('Init', 'model optimizer criterion '+\
                   'diffusion dl info device nb_epochs_finished '+\
                   'begin_date save_path chkpt_path')
+InitSample = namedtuple('InitSample', 'model diffusion info dl '+\
+                        'sampling_method path cfgscale_str')
 
 def create_save_directories(cfg: DictConfig) -> tuple[Path, Path]:
     """
@@ -106,3 +108,21 @@ def init(cfg: DictConfig, verbose: bool=True) -> Init:
     return Init(model, optimizer, criterion, diffusion,
                 dl, info, device, nb_epochs_finished,
                 begin_date, save_path, chkpt_path)
+
+def init_sampling(cfg: DictConfig) -> InitSample:
+    seed = torch.random.initial_seed()  # retrieve current seed
+
+    # Initialization
+    init_tuple = init(cfg)  # TODO: make it more efficient
+    model, diffusion, info, dl = init_tuple.model, init_tuple.diffusion, init_tuple.info, init_tuple.dl
+    try:
+        sampling_method = cfg.common.sampling.method
+    except:
+        sampling_method = "euler"
+    dataset_name = str.lower(cfg.dataset.name)
+    cfgscale_str = str(cfg.common.sampling.cfg_scale).replace('.','_')
+    path = Path(f"./results/images/{dataset_name}/{sampling_method}/")
+    
+    # Don't use the checkpoint seed for sampling
+    torch.manual_seed(seed)
+    return InitSample(model, diffusion, info, dl, sampling_method, path, cfgscale_str)

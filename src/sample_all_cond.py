@@ -1,35 +1,20 @@
 import hydra
 import torch
 
-from init import init
+from init import init_sampling
 from sampler import sample_chunked as sample
 from utils import save
 
 from omegaconf import DictConfig
-from pathlib import Path
 
-
+@torch.no_grad()
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sample_all_cond(cfg: DictConfig):
-    seed = torch.random.initial_seed()  # retrieve current seed
-
-    # Initialization
-    init_tuple = init(cfg)
-    model, diffusion, info = init_tuple.model, init_tuple.diffusion, init_tuple.info
-    try:
-        sampling_method = cfg.common.sampling.method
-    except:
-        sampling_method = "euler"
-    dataset_name = str.lower(cfg.dataset.name)
-    cfgscale_str = str(cfg.common.sampling.cfg_scale).replace('.','_')
-    path = Path(f"./results/images/{dataset_name}/{sampling_method}/")
+    model, diffusion, info, _, sampling_method, path, cfgscale_str = init_sampling(cfg)
     
-    # Don't use the checkpoint seed for sampling
-    torch.manual_seed(seed)
-
     # Sample 90 pictures for each class and save
     nb_per_class = 3*30
-    N, C, H, W = nb_per_class*info.num_classes, info.image_channels, info.image_size, info.image_size
+    N, C, H, W = nb_per_class*info.num_classes, info.image_channels, info.image_size, info.image_size  # 64, 64 for convolutional sampling
     kwargs = {
         "num_samples": N,
         "image_channels": C,
@@ -42,7 +27,7 @@ def sample_all_cond(cfg: DictConfig):
         "num_steps": cfg.common.sampling.num_steps,
         "sampling_method": sampling_method,
     }
-    samples = sample(**kwargs)
+    samples = sample(**kwargs)  # nb_chunks > 1 if memory issues.
 
     save(samples.view(info.num_classes, nb_per_class, C, H, W)[:, :10].reshape(-1, C, H, W),
          path / f"cond_10_cfgscale_{cfgscale_str}.png", nrow=10, padding=1)

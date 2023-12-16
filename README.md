@@ -13,29 +13,79 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 
 ### Conditional generation with Classifier-Free Guidance
 
-**FashionMNIST and CIFAR-10 epoch 100, Euler, 5M parameters U-Net model:**
+**FashionMNIST and CIFAR-10, 50 Euler method steps, 5M parameters U-Net model:**
 
 | <img src="results/images/fashionmnist/euler/cond_10_cfgscale_1.png" width=500> | <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5.png" width=500> |
 |:--:| :--:|
 | <img src="results/images/fashionmnist/euler/cond_90_cfgscale_1.png" width=500> | <img src="results/images/cifar10/euler/cond_90_cfgscale_2_5.png" width=500> |
-| *FashionMNIST cfg.scale=1, Euler method* | *CIFAR-10 cfg.scale=2.5, Euler method* |
+| *FashionMNIST cfg.scale=1, 100 epochs* | *CIFAR-10 cfg.scale=2.5, 200 epochs* |
 
-**Cherry-picked generated horse (cfg.scale=2.5) (Work in Progress):**
-<p align="center">
-<img src="src/images/euler/horse_cherrypicked_cfgscale_2_5.png" width=500>
-</p>
+**Randomly generated horse and ship (cfg.scale=2.5, 50 Euler method steps):**
 
-# How To Use?
+
+| <img src="results/images/cifar10/euler/iterative_denoising_process_class_7_cfgscale_2_5.png" width=500> | <img src="results/images/cifar10/euler/iterative_denoising_process_class_8_cfgscale_2_5.png" width=500> |
+|:--:| :--:|
+
+
+## Installation
+
+- Install PyTorch
+
+```
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+- And other dependencies:
+```
+pip3 install -r requirements.txt
+```
+
+- You may need to download the CelebA dataset from their website: https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+
+The code was developed for Python 3.11.13 with torch==2.1.1 and torchvision==0.16.1. Using a different Python version might cause problems. The computations were performed at University of Geneva using Baobab/Yggdrasil HPC service (Titan RTX gpus).
+
+The current version may not work on your GPU due to our code's poorly optimized memory usage.
+
+## Configuration
+
+Our Python scripts look by default for the configuration file `./config/config.yaml`.
+
+- If a pre-trained model is specified in the `defaults` section of `./config/config.yaml`, the pre-trained model configuration will override the `./config/config.yaml`. More details later. 
+
+- If you want to use another configuration file, you can specify a particular `.yaml` file located under the `./config` directory by appending `--config-name <config-name>` right after the Python filename when launching Python scripts via the CLI.`<config-name>` is your config name without the yaml extension.
+
+### Pre-trained models
+
+```yaml
+defaults:
+  - _self_
+  # Add one of the following right after to use a pre-trained model
+  # - /cifar10/cond@_here_
+  # - /cifar10/cond_ablation_attention@_here_
+  # - /cifar10/uncond@_here_
+
+  # - /fashionmnist/cond@_here_
+  # - /fashionmnist/cond_ablation_attention@_here_
+  # - /fashionmnist/uncond@_here_
+
+  # - /celeba/uncond_big@_here_
+  # - /celeba/uncond_small@_here_
+  # - /celeba/uncond_tiny@_here_
+  # - /celeba/uncond_tiny_ablation_attention@_here_
+```
+
+You can directly use the FashionMNIST and CIFAR-10 checkpoints.
+
+For CelebA: **TODO: add link to download the checkpoints.**
+
 
 ## Training
 
-If you want to train a model from scratch, please make sure to delete `checkpoints/checkpoint.pth`, otherwise training will resume.
+If you want to train a model from scratch, please make sure that the checkpoint path doesn't point to an existing checkpoint, otherwise training will resume.
 
 ```bash
 python src/trainer.py
 ```
-
-Note: if you specify `num_workers` > 0 in the Dataloader and get a warning like `UserWarning: This DataLoader will create 2 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create`, you need to make sure that you have access to enough cpu cores. For instance in Unige Baobab/Yggdrasil HPC service, I have to specify `#SBATCH --cpus-per-task 4` in my Slurm "sbatch" script.
 
 ## Sampling
 
@@ -54,12 +104,35 @@ python src/sampler.py common.sampling.label=<class-id> common.sampling.cfg_scale
 - Classifier-Free Guidance (CFG) for all classes
 
 ```bash
-python src/sampler_all.py common.sampling.cfg_scale=1
+python src/sampler_all.py common.sampling.cfg_scale=<cfg-scale>
 ```
 
-You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can be either `euler`, `heun` or `stochastic_heun`.
+This command also ignores any specified `common.sampling.label`.
 
-# Tests (Work in Progress)
+## FID computation
+
+The following command computes the Fréchet Inception Distance using [Clean-FID](https://github.com/GaParmar/clean-fid).
+
+```bash
+python src/fid.py common.sampling.cfg_scale=<cfg-scale>
+```
+
+This command also ignores any specified `common.sampling.label`.
+
+If `conditional=True` and `info.num_classes` > 0 (or not None), then our code will compute the FID based on conditionally generated samples where classes are sampled uniformly. Therefore, you can change `conditional` in `src/fid.py` to either `True` or `False` depending on your need: conditional FID or unconditional FID respectively.
+
+## More arguments
+- **Training:** You can deactivate weights and biases logs by adding `wandb.mode=disabled`.
+
+- **Sampling:**
+    - You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can either be `euler`, `heun` or `stochastic_heun`. If not specified, the default is `euler`.
+    - You can change the number of sampling steps by adding `common.sampling.num_steps=<num-steps>` where `<num-step>` is a positive integer. If not specified, the default is $50$ sampling steps ($\neq$ number of function evaluations (NFE) since you can choose Heun method which doubles the NFE).
+
+- Refer to [Hydra](https://hydra.cc/docs/intro/) for more information.
+
+---
+
+<!-- # Tests (Work in Progress)
 
 - No code coverage report
 
@@ -75,32 +148,26 @@ python -m coverage run -m unittest discover -s tests/
 
 ```
 python -m coverage report --omit=*python3*
-```
+```-->
 
-# Notes
 
-## Practical
 
-- Bigger network for more capacity. Going from 2M to 33M parameters (or more): randomly positioned eyes (and more than $2$) to recognizable faces (probably thanks to the Multi-head self-attention layers and bigger receptive fields!)
-- Trade-off between the number of parameters and batch size for higher resolution images due to VRAM limits.
-- We have to place the Multi-head self-attention layers in lower spatial resolution due to the quadratic complexity in attention. A spatial resolution $32^2=32 \times 32$ or $16^2 = 16 \times 16$ is intuitively enough to capture the long-range contextual information/dependencies and costs way less than a spatial resolution of $128^2$. On the other hand convolution layers, at both high and low spatial resolution, fix "local" inconsistencies (up to the receptive field size).
-- TODO: ablation of Multi-head self-attention and more heads as we go in lower resolution latent representations
-- TODO: train model with fixes + add EMA and gradient clipping and maybe pixel unshuffle/shuffle
+# Results
 
-## Classifier-Free Guidance
+See `./results/README.md`.
 
-CIFAR-10, Euler method:
+# TODO list
 
-| <img src="src/images/euler/all_cifar10_10.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_5.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_7.png" width=250> |
-|:--:|:--:| :--:| :--:|
-| <img src="src/images/euler/all_cifar10_90.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_5.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_7.png" width=250> |
-| *cfg.scale=1* | *cfg.scale=2.5* | *cfg.scale=5* | *cfg.scale=7* |
+- Analyze the effect of a different number of heads as we go in lower resolution latent representations
+- Train EMA model and maybe use pixel unshuffle/shuffle
+- Re-train everything with the same dataset splits. Training and validation sets are never the same across models due to the `random_split`!
+- Recompute FIDs.
+- Reduce memory footprint
+- Link CelebA checkpoints
 
-- Our **Classifier-Free Guidance** (CFG) scale $\alpha$ corresponds to using $\nabla_x \log p_{t, \alpha}(x|c) = (1-\alpha) \nabla_x \log p_t(x) + \alpha \nabla_x \log p_t(x|c)$ instead of the unconditional score function $\nabla_x \log p_t(x)$ of noisy marginal distributions in the original probability flow ODE $dx = -\dot{\sigma}(t) \sigma(t) \nabla_x \log p_t(x)dt$.
-- [Classifier-Free Diffusion Guidance](https://arxiv.org/abs/2207.12598) paper uses, assuming we can directly replace a noise by a score function, $\nabla_x \log p_{t, \alpha}(x|c) = -\omega \nabla_x \log p_t(x) + (1+\omega) \nabla_x \log p_t(x|c)$ with $\omega=\alpha-1 > 0$. Therefore our CFG scale $\alpha$ should be greater than $1$.
-- $\nabla_x \log p_{t, \alpha}(x|c)$ can also be rewritten as $\nabla_x \log p_t(x) + \alpha (\nabla_x \log p_t(x|c) - \nabla_x \log p_t(x))$
-- The CFG scale $\alpha$ deforms the distribution and reduces diversity. As we can see from the generated CIFAR-10 pictures, a high CFG scale can cause saturated colors so one may opt for class-dependent scales.
-- Our CFG scale is kept unchanged in our sampling methods.
+# Remarks
+
+Note: if you specify `num_workers` > 0 in the Dataloader and get a warning like `UserWarning: This DataLoader will create 2 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create`, you need to make sure that you have access to enough cpu cores. For instance in Unige Baobab/Yggdrasil HPC service, I have to specify `#SBATCH --cpus-per-task 4` in my Slurm "sbatch" script.
 
 # Credits
 
@@ -108,6 +175,7 @@ The computations were performed at University of Geneva using Baobab/Yggdrasil H
 
 - https://github.com/pytorch/pytorch
 - https://github.com/crowsonkb/k-diffusion/tree/master
+- https://github.com/GaParmar/clean-fid
 - https://wandb.ai
 - https://github.com/zalandoresearch/fashion-mnist
 - https://www.cs.toronto.edu/~kriz/cifar.html
