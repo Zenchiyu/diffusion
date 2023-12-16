@@ -117,9 +117,11 @@ def sample(
 @torch.no_grad()
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
-    model, diffusion, info, _, sampling_method, path, _ = init_sampling(cfg)
+    model, diffusion, info, _, sampling_method, path, cfgscale_str = init_sampling(cfg)
 
     # Sample and display
+    prefix = "cond" if cfg.common.sampling.label else "uncond"
+    suffix = f'_class_{cfg.common.sampling.label}_cfgscale_{cfgscale_str}' if cfg.common.sampling.cfg_scale else ''
     N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
     samples, samples_inter = sample(
             N, C, H, model, diffusion,
@@ -131,9 +133,9 @@ def sampler(cfg: DictConfig):
             sampling_method=sampling_method
         )
 
-    save(samples, path / f"uncond_{N}.png")
+    save(samples, path / f"{prefix}_{N}{suffix}.png")
     # Save intermediate generation steps for the first generated picture
-    save(samples_inter[:, 0].view(-1, C, H, W), path / f"iterative_denoising_process.png")
+    save(samples_inter[:, 0].view(-1, C, H, W), path / f"iterative_denoising_process{suffix}.png")
     
 if __name__ == "__main__":
     sampler()
