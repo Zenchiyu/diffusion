@@ -162,6 +162,8 @@ See `./results/README.md`.
 - Train EMA model and maybe use pixel unshuffle/shuffle
 - Re-train everything with the same dataset splits. Training and validation sets are never the same across models due to the `random_split`!
 - Recompute FIDs.
+- Reduce memory footprint
+- Link CelebA checkpoints
 
 # Remarks
 
