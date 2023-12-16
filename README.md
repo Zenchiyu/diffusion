@@ -13,17 +13,19 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 
 ### Conditional generation with Classifier-Free Guidance
 
-**FashionMNIST and CIFAR-10 epoch 100, Euler, 5M parameters U-Net model:**
+**FashionMNIST and CIFAR-10, 50 Euler method steps, 5M parameters U-Net model:**
 
 | <img src="results/images/fashionmnist/euler/cond_10_cfgscale_1.png" width=500> | <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5.png" width=500> |
 |:--:| :--:|
 | <img src="results/images/fashionmnist/euler/cond_90_cfgscale_1.png" width=500> | <img src="results/images/cifar10/euler/cond_90_cfgscale_2_5.png" width=500> |
-| *FashionMNIST cfg.scale=1, Euler method* | *CIFAR-10 cfg.scale=2.5, Euler method* |
+| *FashionMNIST cfg.scale=1, 100 epochs* | *CIFAR-10 cfg.scale=2.5, 200 epochs* |
 
-**Cherry-picked generated horse (cfg.scale=2.5) (Work in Progress):**
-<p align="center">
-<img src="src/images/euler/horse_cherrypicked_cfgscale_2_5.png" width=500>
-</p>
+**Randomly generated horse and ship (cfg.scale=2.5, 50 Euler method steps):**
+
+
+| <img src="results/images/cifar10/euler/iterative_denoising_process_class_7_cfgscale_2_5.png" width=500> | <img src="results/images/cifar10/euler/iterative_denoising_process_class_8_cfgscale_2_5.png" width=500> |
+|:--:| :--:|
+
 
 # How To Use?
 
@@ -77,30 +79,47 @@ python -m coverage run -m unittest discover -s tests/
 python -m coverage report --omit=*python3*
 ```
 
-# Notes
+# Notes and brief discussion
 
 ## Practical
 
 - Bigger network for more capacity. Going from 2M to 33M parameters (or more): randomly positioned eyes (and more than $2$) to recognizable faces (probably thanks to the Multi-head self-attention layers and bigger receptive fields!)
-- Trade-off between the number of parameters and batch size for higher resolution images due to VRAM limits.
+- Trade-off between model architecture and batch size for higher resolution images due to VRAM limits.
 - We have to place the Multi-head self-attention layers in lower spatial resolution due to the quadratic complexity in attention. A spatial resolution $32^2=32 \times 32$ or $16^2 = 16 \times 16$ is intuitively enough to capture the long-range contextual information/dependencies and costs way less than a spatial resolution of $128^2$. On the other hand convolution layers, at both high and low spatial resolution, fix "local" inconsistencies (up to the receptive field size).
-- TODO: ablation of Multi-head self-attention and more heads as we go in lower resolution latent representations
+- Ablation of Multi-head self-attention only slightly affect the visual quality probably due to big enough receptive fields.
+- TODO: Search the effect of different number of heads as we go in lower resolution latent representations
 - TODO: train model with fixes + add EMA and gradient clipping and maybe pixel unshuffle/shuffle
 
-## Classifier-Free Guidance
+## Effect of Classifier-Free Guidance
 
-CIFAR-10, Euler method:
+In the following, we **qualitatively** discuss the behavior of Classifier-Free Guidance (CFG) on CIFAR-10 with $50$ Euler method steps. We omit FashionMNIST since CFG barely affects its generated samples.
 
-| <img src="src/images/euler/all_cifar10_10.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_2_5.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_5.png" width=250> | <img src="src/images/euler/all_cifar10_10_cfgscale_7.png" width=250> |
+| <img src="results/images/cifar10/euler/cond_10_cfgscale_1.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_7.png" width=250> |
 |:--:|:--:| :--:| :--:|
-| <img src="src/images/euler/all_cifar10_90.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_2_5.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_5.png" width=250> | <img src="src/images/euler/all_cifar10_90_cfgscale_7.png" width=250> |
+| <img src="results/images/cifar10/euler/cond_90_cfgscale_1.png" width=250> | <img src="results/images/cifar10/euler/cond_90_cfgscale_2_5.png" width=250> | <img src="results/images/cifar10/euler/cond_90_cfgscale_5.png" width=250> | <img src="results/images/cifar10/euler/cond_90_cfgscale_7.png" width=250> |
 | *cfg.scale=1* | *cfg.scale=2.5* | *cfg.scale=5* | *cfg.scale=7* |
 
 - Our **Classifier-Free Guidance** (CFG) scale $\alpha$ corresponds to using $\nabla_x \log p_{t, \alpha}(x|c) = (1-\alpha) \nabla_x \log p_t(x) + \alpha \nabla_x \log p_t(x|c)$ instead of the unconditional score function $\nabla_x \log p_t(x)$ of noisy marginal distributions in the original probability flow ODE $dx = -\dot{\sigma}(t) \sigma(t) \nabla_x \log p_t(x)dt$.
 - [Classifier-Free Diffusion Guidance](https://arxiv.org/abs/2207.12598) paper uses, assuming we can directly replace a noise by a score function, $\nabla_x \log p_{t, \alpha}(x|c) = -\omega \nabla_x \log p_t(x) + (1+\omega) \nabla_x \log p_t(x|c)$ with $\omega=\alpha-1 > 0$. Therefore our CFG scale $\alpha$ should be greater than $1$.
 - $\nabla_x \log p_{t, \alpha}(x|c)$ can also be rewritten as $\nabla_x \log p_t(x) + \alpha (\nabla_x \log p_t(x|c) - \nabla_x \log p_t(x))$
-- The CFG scale $\alpha$ deforms the distribution and reduces diversity. As we can see from the generated CIFAR-10 pictures, a high CFG scale can cause saturated colors so one may opt for class-dependent scales.
-- Our CFG scale is kept unchanged in our sampling methods.
+- The CFG scale $\alpha$ deforms the distribution and reduces diversity but can help "separate" classes. One should only tweak that scale if one doesn't want to exactly sample for the class-conditional distribution!
+- As we can see from the generated CIFAR-10 pictures, a high CFG scale can cause saturated colors while a low CFG scale can lead to visually poor samples. Therefore, one may opt for class and dataset dependent scales.
+- Our CFG scale is not adaptive in our sampling methods.
+
+## Effect of self-attention
+
+In the following, we **qualitatively** and sometimes **quantitatively** discuss the effect of self-attention on CIFAR-10 and FashionMNIST with $50$ Euler method steps. Note that the self-attention ablation also reduces the number of parameters, the capacity of the model.
+
+### CIFAR-10
+- First row: with self-attention at each resolution level
+- Second row: without self-attention
+
+| <img src="results/images/cifar10/euler/cond_10_cfgscale_1.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_7.png" width=250> |
+|:--:|:--:| :--:| :--:|
+| <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_1.png" width=250> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_2_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_7.png" width=250> |
+| *cfg.scale=1* | *cfg.scale=2.5* | *cfg.scale=5* | *cfg.scale=7* |
+
+
 
 # Credits
 
