@@ -109,8 +109,19 @@ python src/sampler_all.py common.sampling.cfg_scale=<cfg-scale>
 
 This command also ignores any specified `common.sampling.label`.
 
----
-**More arguments:**
+## FID computation
+
+The following command computes the Fréchet Inception Distance using [Clean-FID](https://github.com/GaParmar/clean-fid).
+
+```bash
+python src/fid.py common.sampling.cfg_scale=<cfg-scale>
+```
+
+This command also ignores any specified `common.sampling.label`.
+
+If `conditional=True` and `info.num_classes` > 0 (or not None), then our code will compute the FID based on conditionally generated samples where classes are sampled uniformly. Therefore, you can change `conditional` in `src/fid.py` to either `True` or `False` depending on your need: conditional FID or unconditional FID respectively.
+
+## More arguments
 - **Training:** You can deactivate weights and biases logs by adding `wandb.mode=disabled`.
 
 - **Sampling:**
@@ -162,6 +173,7 @@ The computations were performed at University of Geneva using Baobab/Yggdrasil H
 
 - https://github.com/pytorch/pytorch
 - https://github.com/crowsonkb/k-diffusion/tree/master
+- https://github.com/GaParmar/clean-fid
 - https://wandb.ai
 - https://github.com/zalandoresearch/fashion-mnist
 - https://www.cs.toronto.edu/~kriz/cifar.html
