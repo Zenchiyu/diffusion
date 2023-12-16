@@ -7,6 +7,7 @@ You can explore the rest of our generated samples in `./results/images`.
 - However, the tests sets are the same across models.
 - Each FID score reported below is computed between 50k generated images (from the last epoch) and a reference set: either train, val or test sets.
 - Generated images are compared to transformed/pre-processed reference images.
+- Unless stated differently, the images are generated with $50$ Euler method steps.
 
 
 ## Quantitative FID results

@@ -101,25 +101,25 @@ python src/sampler.py
 python src/sampler.py common.sampling.label=<class-id> common.sampling.cfg_scale=<cfg-scale>
 ```
 
+- Classifier-Free Guidance (CFG) for all classes
+
+```bash
+python src/sampler_all.py common.sampling.cfg_scale=<cfg-scale>
+```
+
+This command also ignores any specified `common.sampling.label`.
+
 ---
 **More arguments:**
 - **Training:** You can deactivate weights and biases logs by adding `wandb.mode=disabled`.
 
 - **Sampling:**
-    - You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can either be `euler`, `heun` or `stochastic_heun`.
+    - You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can either be `euler`, `heun` or `stochastic_heun`. If not specified, the default is `euler`.
     - You can change the number of sampling steps by adding `common.sampling.num_steps=<num-steps>` where `<num-step>` is a positive integer. If not specified, the default is $50$ sampling steps ($\neq$ number of function evaluations (NFE) since you can choose Heun method which doubles the NFE).
 
-- You can change much more. Refer to [Hydra](https://hydra.cc/docs/intro/) for more information.
+- Refer to [Hydra](https://hydra.cc/docs/intro/) for more information.
 
 ---
-
-- Classifier-Free Guidance (CFG) for all classes
-
-```bash
-python src/sampler_all.py common.sampling.cfg_scale=1
-```
-
-This command also ignores any specified `common.sampling.label`.
 
 <!-- # Tests (Work in Progress)
 
