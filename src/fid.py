@@ -34,9 +34,11 @@ def create_directories(
 @torch.no_grad()
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def compute_fid(cfg: DictConfig):
+    # Change this to True if you have a class-conditioned model
+    conditional = False  # True
+    
     model, diffusion, info, dl, sampling_method, _, cfgscale_str = init_sampling(cfg)
-
-    conditional, batch_size, num_gen = True, 10, 50_000  # literature: on 50_000 generated images
+    batch_size, num_gen = 10, 50_000  # literature: on 50_000 generated images
     N, C, H, W = batch_size, info.image_channels, info.image_size, info.image_size
 
     gen_prefix = 'cond_' if conditional else ''
@@ -76,7 +78,6 @@ def compute_fid(cfg: DictConfig):
         print(txt)
         with open(str(fid_path / f"{gen_prefix}fid_{split}_{num_gen//1000}k.txt"), 'w') as f:
             print(txt, file=f)
-
 
 if __name__ == "__main__":
     compute_fid()
