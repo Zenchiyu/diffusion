@@ -108,17 +108,36 @@ In the following, we **qualitatively** discuss the behavior of Classifier-Free G
 
 ## Effect of self-attention
 
-In the following, we **qualitatively** and sometimes **quantitatively** discuss the effect of self-attention on CIFAR-10 and FashionMNIST with $50$ Euler method steps. Note that the self-attention ablation also reduces the number of parameters, the capacity of the model.
+### Class-conditional FashionMNIST and CIFAR-10
+In the following, we **qualitatively** and **quantitatively** discuss the effect of self-attention on class-conditional FashionMNIST and CIFAR-10 with cfg scale 1 and 2.5 respectively (both with $50$ Euler method steps). Note that the self-attention ablation also reduces the number of parameters and therefore also reduces the model capacity.
 
-### CIFAR-10
+
 - First row: with self-attention at each resolution level
 - Second row: without self-attention
 
-| <img src="results/images/cifar10/euler/cond_10_cfgscale_1.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_cfgscale_7.png" width=250> |
-|:--:|:--:| :--:| :--:|
-| <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_1.png" width=250> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_2_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_5.png" width=250> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_7.png" width=250> |
-| *cfg.scale=1* | *cfg.scale=2.5* | *cfg.scale=5* | *cfg.scale=7* |
+| <img src="results/images/fashionmnist/euler/cond_10_cfgscale_1.png" width=250> |  <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5.png" width=250> |
+|:--:| :--:|
+| <img src="results/images/fashionmnist/euler/cond_10_ablation_attention_cfgscale_1.png" width=250> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_2_5.png" width=250> |
+| *cfg.scale=1* | *cfg.scale=2.5* |
 
+- Removing self-attention visually doesn't seem to strongly affect FashionMNIST and CIFAR-10.
+- **Hypothesis:** big enough receptive field (far-away dependencies are catched), convolution does the heavy lifting. The slight differences could be caused by the difference in the model capacity and number of parameters.
+- **FID:**
+- **Loss:**
+
+### Class-conditional CelebA
+
+- Removing self-attention visually doesn't seem to strongly affect CelebA.
+- **Hypothesis:** big enough receptive field (far-away dependencies are catched), convolution does the heavy lifting. The differences could be caused by the difference in the model capacity and number of parameters.
+- **FID:**
+- **Loss:**
+
+### Sampling in a convolutional manner CIFAR-10 and FashionMNIST
+
+| <img src="results/images/fashionmnist/euler/cond_10_cfgscale_1_64x64.png" width=250> |  <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5_64x64.png" width=250> |
+|:--:| :--:|
+| <img src="results/images/fashionmnist/euler/cond_10_ablation_attention_cfgscale_1_64x64.png" width=250> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_2_5_64x64.png" width=250> |
+| *cfg.scale=1* | *cfg.scale=2.5* |
 
 
 # Credits
