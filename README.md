@@ -134,6 +134,9 @@ In the following, we **qualitatively** and **quantitatively** discuss the effect
 
 ### Sampling in a convolutional manner CIFAR-10 and FashionMNIST
 
+- First row: with self-attention at each resolution level
+- Second row: without self-attention
+
 | <img src="results/images/fashionmnist/euler/cond_10_cfgscale_1_64x64.png" width=500> |  <img src="results/images/cifar10/euler/cond_10_cfgscale_2_5_64x64.png" width=500> |
 |:--:| :--:|
 | <img src="results/images/fashionmnist/euler/cond_10_ablation_attention_cfgscale_1_64x64.png" width=500> | <img src="results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_2_5_64x64.png" width=500> |
