@@ -125,8 +125,9 @@ If `conditional=True` and `info.num_classes` > 0 (or not None), then our code wi
 - **Training:** You can deactivate weights and biases logs by adding `wandb.mode=disabled`.
 
 - **Sampling:**
-    - You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can either be `euler`, `heun` or `stochastic_heun`. If not specified, the default is `euler`.
-    - You can change the number of sampling steps by adding `common.sampling.num_steps=<num-steps>` where `<num-step>` is a positive integer. If not specified, the default is $50$ sampling steps ($\neq$ number of function evaluations (NFE) since you can choose Heun method which doubles the NFE).
+    - You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can either be `euler`, `heun` or `stochastic_heun`. If not specified, the default is the `common.sampling.method` method from the configuration file. It could be for instance `euler`.
+    - You can change the number of sampling steps by adding `common.sampling.num_steps=<num-steps>` where `<num-step>` is a positive integer. If not specified, the default is the `common.sampling.num_steps` method from the configuration file.
+    It could be for instance $50$ sampling steps ($\neq$ number of function evaluations (NFE) since you can choose Heun method which doubles the NFE).
 
 - Refer to [Hydra](https://hydra.cc/docs/intro/) for more information.
 
