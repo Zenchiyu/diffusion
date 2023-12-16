@@ -114,6 +114,7 @@ def sample(
     # Final X_noisy contains the sampled images
     return X_noisy
 
+@torch.no_grad()
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
     model, diffusion, info, _, sampling_method, path, _ = init_sampling(cfg)
