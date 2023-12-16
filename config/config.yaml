@@ -42,21 +42,21 @@ diffusion:
 optim:  # Adam optimizer
   lr: 1e-4
 
-# # I usually change these below:
-# dataset:
-#   name: CelebA  # FashionMNIST, CIFAR10, CelebA
-#   root_dir: ./data  # relative to cwd
-#   batch_size: 32
-#   num_workers: 0
+# I usually change these below:
+dataset:
+  name: CelebA  # FashionMNIST, CIFAR10, CelebA
+  root_dir: ./data  # relative to cwd
+  batch_size: 32
+  num_workers: 0
 
-# model:
-#   min_channels: 64
-#   depths: [2, 2, 2, 2]
-#   # resolutions: 128 -> 64 -> 32 -> 16. 4 in the bridge.
-#   # channels: 64 -> 128 -> 256 -> 512. 1024 in the bridge.
-#   # bridge has the same 'depth' as depths[-1].
-#   # first resolution level, no downsampling.
-#   cond_channels: 8
-#   self_attentions: [False, False, True, True]
-#   self_attention_bridge: True
-#   nb_heads: [1, 2, 4, 8]
+model:
+  min_channels: 64
+  depths: [2, 2, 2, 2]
+  # resolutions: 128 -> 64 -> 32 -> 16. 4 in the bridge.
+  # channels: 64 -> 128 -> 256 -> 512. 1024 in the bridge.
+  # bridge has the same 'depth' as depths[-1].
+  # first resolution level, no downsampling.
+  cond_channels: 8
+  self_attentions: [False, False, True, True]
+  self_attention_bridge: True
+  nb_heads: [1, 2, 4, 8]
