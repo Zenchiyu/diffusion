@@ -42,9 +42,9 @@ pip3 install -r requirements.txt
 
 - You may need to download the CelebA dataset from their website: https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
 
-The code was developed for Python 3.11.13 with torch==2.1.1 and torchvision==0.16.1. Using a different Python version might cause problems. The computations were performed at University of Geneva using Baobab/Yggdrasil HPC service (Titan RTX gpus).
+We developed the code for Python 3.11.13 with torch==2.1.1 and torchvision==0.16.1. Using a different Python version might cause problems. The computations were performed at the University of Geneva using the Baobab/Yggdrasil HPC service (Titan RTX GPUs).
 
-For FashionMNIST and CIFAR-10, our current version uses around 591 MiB of VRAM for `./src/sample_all_cond.py` and around 2510MiB of VRAM for `./src/sampler.py`. For CelebA (tiny model), our current version uses around 4215MiB of VRAM for `./src/sampler.py`.
+For FashionMNIST and CIFAR-10, our current version uses around 591 MiB of VRAM for `./src/sample_all_cond.py` and around 2510 MiB of VRAM for `./src/sampler.py`. For CelebA (tiny model), our current version uses around 4215 MiB of VRAM for `./src/sampler.py`.
 
 ## Configuration
 
@@ -52,7 +52,7 @@ Our Python scripts look by default for the configuration file `./config/config.y
 
 - If a pre-trained model is specified in the `defaults` section of `./config/config.yaml`, the pre-trained model configuration will override the `./config/config.yaml`. More details later. 
 
-- If you want to use another configuration file, you can specify a particular `.yaml` file located under the `./config` directory by appending `--config-name <config-name>` right after the Python filename when launching Python scripts via the CLI.`<config-name>` is your config name without the yaml extension.
+- You can specify a particular `.yaml` file located under the `./config` directory. To do so, you can append `--config-name <config-name>` right after the Python filename when launching Python scripts via the CLI. `<config-name>` is your config name without the yaml extension.
 
 ### Pre-trained models
 
@@ -76,12 +76,12 @@ defaults:
 
 You can directly use the FashionMNIST and CIFAR-10 checkpoints.
 
-For CelebA: **TODO: add link to download the checkpoints.**
+For CelebA: **TODO: add a link to download the checkpoints.**
 
 
 ## Training
 
-If you want to train a model from scratch, please make sure that the checkpoint path doesn't point to an existing checkpoint, otherwise training will resume.
+If you want to train a model from scratch, please ensure the checkpoint path doesn't point to an existing checkpoint. Otherwise, training will resume.
 
 ```bash
 python src/trainer.py
@@ -119,15 +119,14 @@ python src/fid.py common.sampling.cfg_scale=<cfg-scale>
 
 This command also ignores any specified `common.sampling.label`.
 
-If `conditional=True` and `info.num_classes` > 0 (or not None), then our code will compute the FID based on conditionally generated samples where classes are sampled uniformly. Therefore, you can change `conditional` in `src/fid.py` to either `True` or `False` depending on your need: conditional FID or unconditional FID respectively.
+If `conditional=True` and `info.num_classes` > 0 (or not None), our code will compute the FID based on conditionally generated samples with uniformly sampled classes. Therefore, you can change `conditional` in `src/fid.py` to either `True` or `False` for conditional or unconditional FID.
 
 ## More arguments
 - **Training:** You can deactivate weights and biases logs by adding `wandb.mode=disabled`.
 
 - **Sampling:**
-    - You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can either be `euler`, `heun` or `stochastic_heun`. If not specified, the default is the `common.sampling.method` method from the configuration file. It could be for instance `euler`.
-    - You can change the number of sampling steps by adding `common.sampling.num_steps=<num-steps>` where `<num-step>` is a positive integer. If not specified, the default is the `common.sampling.num_steps` method from the configuration file.
-    It could be for instance $50$ sampling steps ($\neq$ number of function evaluations (NFE) since you can choose Heun method which doubles the NFE).
+    - You can change the sampling method by adding `common.sampling.method=<sampling-method>` where `<sampling-method>` can either be `euler`, `heun` or `stochastic_heun`. If not specified, the default is the method from the configuration file (e.g. `euler`).
+    - You can change the number of sampling steps by adding `common.sampling.num_steps=<num-steps>` where `<num-step>` is a positive integer. If not specified, the default is the number of steps from the configuration file (e.g. $50$ sampling steps). The number of sampling steps $\neq$ of function evaluations (NFE) since you can choose the Heun method that doubles the NFE.
 
 - Refer to [Hydra](https://hydra.cc/docs/intro/) for more information.
 
@@ -160,7 +159,7 @@ See `./results/README.md`.
 # TODO list
 
 - Analyze the effect of a different number of heads as we go in lower resolution latent representations
-- Train EMA model and maybe use pixel unshuffle/shuffle
+- Track an EMA model and maybe use pixel unshuffle/shuffle
 - Re-train everything with the same dataset splits. Training and validation sets are never the same across models due to the `random_split`!
 - Recompute FIDs.
 - Reduce memory footprint
@@ -172,7 +171,7 @@ Note: if you specify `num_workers` > 0 in the Dataloader and get a warning like 
 
 # Credits
 
-The computations were performed at University of Geneva using Baobab/Yggdrasil HPC service
+The computations were performed at the University of Geneva using the Baobab/Yggdrasil HPC service
 
 - https://github.com/pytorch/pytorch
 - https://github.com/crowsonkb/k-diffusion/tree/master
