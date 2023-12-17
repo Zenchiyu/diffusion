@@ -44,7 +44,7 @@ pip3 install -r requirements.txt
 
 We developed the code for Python 3.11.13 with torch==2.1.1 and torchvision==0.16.1. Using a different Python version might cause problems. The computations were performed at the University of Geneva using the Baobab/Yggdrasil HPC service (Titan RTX GPUs).
 
-For FashionMNIST and CIFAR-10, our current version uses around 591 MiB of VRAM for `./src/sample_all_cond.py` and around 2510 MiB of VRAM for `./src/sampler.py`. For CelebA (tiny model), our current version uses around 4215 MiB of VRAM for `./src/sampler.py`.
+The sampling not only works on Titan RTX GPUs but also works on a GTX 1070 using less than 4000 MiB of VRAM for Euler and Heun sampling method (FashionMNIST and CIFAR-10).
 
 ---
 <details>
@@ -76,7 +76,7 @@ For FashionMNIST and CIFAR-10, our current version uses around 591 MiB of VRAM f
     pip install --upgrade pip
     pip install -r requirements.txt
     ```
-  - You also need the following in your `~/.bashrc`
+  - Where `~/.bashrc` should contain
     ```
     alias pip=$HOME/.myvenv/bin/pip3
     alias activate='source $HOME/.myvenv/bin/activate'
@@ -149,7 +149,7 @@ python src/sampler.py common.sampling.label=<class-id> common.sampling.cfg_scale
 - Classifier-Free Guidance (CFG) for all classes
 
 ```bash
-python src/sampler_all.py common.sampling.cfg_scale=<cfg-scale>
+python src/sample_all_cond.py common.sampling.cfg_scale=<cfg-scale>
 ```
 
 This command also ignores any specified `common.sampling.label`.
