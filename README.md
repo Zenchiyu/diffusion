@@ -95,16 +95,16 @@ The sampling not only works on Titan RTX GPUs but also on a GTX 1070 using less 
 
 Our Python scripts look by default for the configuration file `./config/config.yaml`.
 
-- If a pre-trained model is specified in the `defaults` section of `./config/config.yaml`, the pre-trained model configuration will override the `./config/config.yaml`. More details later. 
+- If a trained model is specified in the `defaults` section of `./config/config.yaml`, the trained model configuration will override the `./config/config.yaml`. More details later. 
 
 - You can specify a particular `.yaml` file located under the `./config` directory. To do so, you can append `--config-name <config-name>` right after the Python filename when launching Python scripts via the CLI. `<config-name>` is your config name without the yaml extension.
 
-### Pre-trained models
+### Trained models
 
 ```yaml
 defaults:
   - _self_
-  # Add one of the following right after to use a pre-trained model
+  # Add one of the following right after to use a trained model
   # - /cifar10/cond@_here_
   # - /cifar10/cond_ablation_attention@_here_
   # - /cifar10/uncond@_here_
@@ -209,6 +209,7 @@ See `./results/README.md`.
 - Recompute FIDs.
 - Reduce memory footprint
 - Link CelebA checkpoints
+- Decouple sampling and training procedures (incl. the initializations).
 
 # Remarks
 

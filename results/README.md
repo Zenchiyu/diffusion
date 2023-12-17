@@ -152,7 +152,25 @@ The idea of applying our model to higher-resolution images comes from [High-Reso
 
 ## Practical "lessons"
 
+**Capacity and computational trade-offs:**
 - Bigger network for more capacity. Going from 2M to 33M parameters (or more): randomly positioned eyes (and more than $2$) to recognizable faces (probably thanks to the Multi-head self-attention layers and bigger receptive fields!)
 - Trade-off between model architecture and batch size for higher resolution images due to VRAM limits.
+
+**Multi-head self-attention:**
+
 - We have to place the Multi-head self-attention layers in lower spatial resolution due to the quadratic complexity in attention. A spatial resolution of $32^2=32 \times 32$ or $16^2 = 16 \times 16$ is intuitively enough to capture the long-range contextual information/dependencies and costs way less than a spatial resolution of $128^2$. On the other hand convolution layers, at both high and low spatial resolution, fix "local" inconsistencies (up to the receptive field size).
 - Ablation of Multi-head self-attention only slightly affects the visual quality probably due to big enough receptive fields.
+
+**Not reported in this work:**
+- **Concatenative U-Net skip connections** are relevant. Removing them leads to noisy pictures or weird textures.
+- **Positional encoding is not often used** in U-Net with attention architectures in contrast to GPT-like transformers. [How Much Position Information Do Convolutional Neural Networks Encode?](https://arxiv.org/abs/2001.08248) ICLR  paper provides an explanation of the implicit positional information given by convolutional neural networks.
+    Their conclusion states the following:
+    > In this paper we explore the hypothesis that absolute position information is implicitly encoded
+in convolutional neural networks. Experiments reveal that positional information is available to a
+strong degree. More detailed experiments show that larger receptive fields or non-linear readout
+of positional information further augments the readout of absolute position, which is already very
+strong from a trivial single layer 3 × 3 PosENet. Experiments also reveal that this recovery is possible when no semantic cues are present and interference from semantic information suggests joint
+encoding of what (semantic features) and where (absolute position). Results point to zero padding
+and borders as an anchor from which spatial information is derived and eventually propagated over
+the whole image as spatial abstraction occurs. These results demonstrate a fundamental property of
+CNNs that was unknown to date, and for which much further exploration is warranted.
