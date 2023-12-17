@@ -46,6 +46,51 @@ We developed the code for Python 3.11.13 with torch==2.1.1 and torchvision==0.16
 
 For FashionMNIST and CIFAR-10, our current version uses around 591 MiB of VRAM for `./src/sample_all_cond.py` and around 2510 MiB of VRAM for `./src/sampler.py`. For CelebA (tiny model), our current version uses around 4215 MiB of VRAM for `./src/sampler.py`.
 
+---
+<details>
+  <summary>Using a virtual environment</summary>
+
+- Ubuntu:
+  - Setting up the virtual environment
+    ```bash
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt install python3.11
+    sudo apt install python3.11-venv
+    python3.11 -m venv ~/.myvenv
+    source ~/.myvenv/bin/activate
+    
+    ~/.myvenv/bin/pip3 install --upgrade pip
+    ~/.myvenv/bin/pip3 install -r requirements.txt
+    ```
+
+- Yggdrasil or Baobab HPC service
+  - Setting up the virtual environment
+    ```
+    module load GCCcore/12.3.0 virtualenv/20.23.1
+    module load Python/3.11.3
+    module load code-server/4.17.1
+    python3 -m venv $HOME/.myvenv
+    source $HOME/.myvenv/bin/activate
+    
+    pip install wheel
+    pip install --upgrade pip
+    pip install -r requirements.txt
+    ```
+  - You also need the following in your `~/.bashrc`
+    ```
+    alias pip=$HOME/.myvenv/bin/pip3
+    alias activate='source $HOME/.myvenv/bin/activate'
+    
+    module load GCCcore/12.3.0 virtualenv/20.23.1
+    module load Python/3.11.3
+    module load code-server/4.17.1
+    python3 -m venv $HOME/.myvenv
+    activate
+    ```
+    and then `source $HOME/.bashrc`
+
+</details>
+
 ## Configuration
 
 Our Python scripts look by default for the configuration file `./config/config.yaml`.
