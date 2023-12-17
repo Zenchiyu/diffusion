@@ -44,7 +44,7 @@ pip3 install -r requirements.txt
 
 We developed the code for Python 3.11.13 with torch==2.1.1 and torchvision==0.16.1. Using a different Python version might cause problems. The computations were performed at the University of Geneva using the Baobab/Yggdrasil HPC service (Titan RTX GPUs).
 
-The sampling not only works on Titan RTX GPUs but also works on a GTX 1070 using less than 4000 MiB of VRAM for Euler and Heun sampling method (FashionMNIST and CIFAR-10).
+The sampling not only works on Titan RTX GPUs but also on a GTX 1070 using less than 4000 MiB of VRAM (FashionMNIST and CIFAR-10) or less than 5000 MiB (CelebA tiny) for the Euler and Heun sampling method.
 
 ---
 <details>
