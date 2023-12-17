@@ -203,13 +203,15 @@ See `./results/README.md`.
 
 # TODO list
 
+- Link CelebA checkpoints
+- Reduce memory footprint (mostly in training)
+- Decouple sampling and training procedures (incl. the initializations).
+- Nearest neighbors in Inception V3 feature space.
+- Report the effect of U-Net encoder-decoder skip connections ablation
 - Analyze the effect of a different number of heads as we go in lower resolution latent representations
 - Track an EMA model and maybe use pixel unshuffle/shuffle
 - Re-train everything with the same dataset splits. Training and validation sets are never the same across models due to the `random_split`!
 - Recompute FIDs.
-- Reduce memory footprint
-- Link CelebA checkpoints
-- Decouple sampling and training procedures (incl. the initializations).
 
 # Remarks
 
