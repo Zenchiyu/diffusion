@@ -139,7 +139,7 @@ Since our CIFAR-10 and FashionMNIST models are "independent" of the input spatia
 
 Intuitively, we may explain the de-duplicated objects due to the convolutional architecture: we apply more or less the same operation everywhere (if we ignore the attention mechanisms).
 
-It's as if the $64^2$-dimensional space contains multiple times the original $32^2$-dimensional image space. This leads sub-windows to generate the same class of object (attracted by the data distribution via the learned original time-dependent score functions).
+It's as if the $C \cdot 64^2$-dimensional space contains multiple times the original $C \cdot 32^2$-dimensional image space where $C$ is the number of channels. This leads sub-windows to generate the same class of object (attracted by the data distribution via the learned original time-dependent score functions).
 
 ---
 <!-- Far-fetched
