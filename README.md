@@ -1,4 +1,4 @@
-![image](https://github.com/Zenchiyu/diffusion/assets/49496107/62375d8d-6b2e-4909-8e89-55b2496c84f7)# Diffusion
+# Diffusion
 Deep Learning Project on Diffusion Models for Image Generation based on [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)'s paper by Karras et al.
 
 ## Generated samples
