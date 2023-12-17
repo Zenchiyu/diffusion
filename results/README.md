@@ -10,6 +10,8 @@ You can explore the rest of our generated samples in `./images`.
 
 ## Quantitative FID results
 
+The lower the FID, the better it should be.
+
 ### FashionMNIST
 - **Class-conditional FID, cfg.scale 1:**
 
