@@ -177,26 +177,6 @@ If `conditional=True` and `info.num_classes` > 0 (or not None), our code will co
 
 ---
 
-<!-- # Tests (Work in Progress)
-
-- No code coverage report
-
-```
-python -m unittest discover -s tests/
-```
-
-- If want code coverage:
-
-```
-python -m coverage run -m unittest discover -s tests/
-```
-
-```
-python -m coverage report --omit=*python3*
-```-->
-
-
-
 # Results
 
 See `./results/README.md`.
