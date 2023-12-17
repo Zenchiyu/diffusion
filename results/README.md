@@ -7,7 +7,7 @@ You can explore the rest of our generated samples in `./images`.
 
 | <img src="https://github.com/zalandoresearch/fashion-mnist/blob/b2617bb6d3ffa2e429640350f613e3291e10b141/doc/img/fashion-mnist-sprite.png" width=500> | <img src="../results/images/cifar10/euler/cond_10_cfgscale_2_5.png" width=500> |
 |:--:| :--:|
-| <img src="../results/images/fashionmnist/euler/cond_90_cfgscale_1.png" width=500> | <img src="https://www.cs.toronto.edu/~kriz/cifar.html" width=500> |
+| <img src="../results/images/fashionmnist/euler/cond_90_cfgscale_1.png" width=500> | <img src="https://www.cs.toronto.edu/~kriz/cifar-10-sample/dog8.png" width=500> |
 | *FashionMNIST cfg.scale=1, 100 epochs* | *CIFAR-10 cfg.scale=2.5, 200 epochs* |
 
 ## Important remark(s)
