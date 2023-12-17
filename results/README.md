@@ -3,10 +3,9 @@
 You can explore the rest of our generated samples in `./images`.
 
 ## Important remark(s)
-- Models are not currently trained and evaluated on the same train and validation sets due to `random_split`. However, FIDs are computed on same train and validation sets. Therefore, one shouldn't give conclusions based on them (where we write a "*").
-- However, the tests sets are the same across models.
-- Each FID score reported below is computed between 50k generated images (from the last epoch) and a reference set: either train, val or test sets.
-- Generated images are compared to transformed/pre-processed reference images.
+- Models are not currently trained and evaluated on the same train and validation sets due to `random_split`. However, FIDs are computed on the same train and validation sets. Therefore, one shouldn't give conclusions based on them (where we write a "*").
+- However, the test sets are the same across models.
+- We compute each FID score reported below with 50k generated images (from the last epoch) and a reference set: either train, val or test sets (transformed/pre-processed images).
 - Unless stated differently, the images are generated with $50$ Euler method steps.
 
 ## Quantitative FID results
@@ -71,8 +70,8 @@ In the following, we **qualitatively** discuss the behavior of Classifier-Free G
 | <img src="../results/images/cifar10/euler/cond_90_cfgscale_1.png" width=250> | <img src="../results/images/cifar10/euler/cond_90_cfgscale_2_5.png" width=250> | <img src="../results/images/cifar10/euler/cond_90_cfgscale_5.png" width=250> | <img src="../results/images/cifar10/euler/cond_90_cfgscale_7.png" width=250> |
 | *cfg.scale=1* | *cfg.scale=2.5* | *cfg.scale=5* | *cfg.scale=7* |
 
-- The CFG scale $\alpha$ deforms the distribution and reduces diversity but can help "separate" classes. One should only tweak that scale if one doesn't want to exactly sample for the class-conditional distribution!
-- As we can see from the generated CIFAR-10 pictures, a high CFG scale can cause saturated colors while a low CFG scale can lead to visually poor samples. Therefore, one may opt for class and dataset dependent scales.
+- The CFG scale $\alpha$ deforms the distribution and reduces diversity but can help "separate" classes. You should only tweak that scale if one don't want to sample for the class-conditional distribution!
+- As we can see from the generated CIFAR-10 pictures, a large CFG scale can cause saturated colors. Alternatively, a low CFG scale can lead to visually poor samples. Therefore, one may opt for class and dataset-dependent scales.
 
 #### Remarks
 - Our **Classifier-Free Guidance** (CFG) scale $\alpha$ corresponds to using $\nabla_x \log p_{t, \alpha}(x|c) = (1-\alpha) \nabla_x \log p_t(x) + \alpha \nabla_x \log p_t(x|c)$ instead of the unconditional score function $\nabla_x \log p_t(x)$ of noisy marginal distributions in the original probability flow ODE $dx = -\dot{\sigma}(t) \sigma(t) \nabla_x \log p_t(x)dt$.
@@ -83,7 +82,7 @@ In the following, we **qualitatively** discuss the behavior of Classifier-Free G
 ### Effect of self-attention
 
 #### Class-conditional FashionMNIST and CIFAR-10
-In the following, we **qualitatively** and **quantitatively** discuss the effect of self-attention on class-conditional FashionMNIST and CIFAR-10 with cfg scale 1 and 2.5 respectively (both with $50$ Euler method steps). Note that the self-attention ablation also reduces the number of parameters and therefore also reduces the model capacity.
+In the following, we **qualitatively** and **quantitatively** discuss the effect of self-attention on class-conditional FashionMNIST and CIFAR-10 with a cfg scale of 1 and 2.5 respectively (both with $50$ Euler method steps). The self-attention ablation decreases the number of parameters, consequently reducing the model capacity.
 
 ---
 
@@ -95,8 +94,8 @@ In the following, we **qualitatively** and **quantitatively** discuss the effect
 |w/o| <img src="../results/images/fashionmnist/euler/cond_10_ablation_attention_cfgscale_1.png" width=500> | <img src="../results/images/cifar10/euler/cond_10_ablation_attention_cfgscale_2_5.png" width=500> |
 || *cfg.scale=1* | *cfg.scale=2.5* |
 
-- Removing self-attention visually doesn't seem to strongly affect FashionMNIST and CIFAR-10.
-- **Hypothesis:** big enough receptive field (far-away dependencies are catched), convolution does the heavy lifting. The slight differences could be caused by the difference in the model capacity and number of parameters.
+- Removing self-attention doesn't visually seem to affect FashionMNIST and CIFAR-10.
+- **Hypothesis:** big enough receptive field (far-away dependencies are caught), convolution does the heavy lifting. The slight differences could arise from the difference in the model capacity and number of parameters.
 
 - **Class-conditional FashionMNIST FID, cfg.scale 1:**
 
@@ -126,7 +125,7 @@ In the following, we **qualitatively** and **quantitatively** discuss the effect
 
 #### Playing with CIFAR-10 and FashionMNIST convolutional sampling with $64^2$ px input
 
-Since our CIFAR-10 and FashionMNIST models are "independent" of the input spatial resolution, we can sample by iteratively denoising a $64^2$ px image even though these models are trained on $32^2$ px images. Note that the quadratic complexity in attention still prohibits us from sampling higher resolution images.
+Since our CIFAR-10 and FashionMNIST models are "independent" of the input spatial resolution, we can sample a $64^2$ px image even though we trained these models on $32^2$ px images. Note that the quadratic complexity in attention is still prohibitive in higher-resolution regimes.
 
 - Rows: with/without self-attention at each resolution level
 - Columns: FashionMNIST, CIFAR-10
@@ -138,20 +137,20 @@ Since our CIFAR-10 and FashionMNIST models are "independent" of the input spatia
 
 Intuitively, we may explain the de-duplicated objects due to the convolutional architecture: we apply more or less the same operation everywhere (if we ignore the attention mechanisms).
 
-It's as if the $64^2$-dimensional space contains multiple times the original $32^2$-dimensional image space causing sub-windows to generate the same class of object (attracted by the original data distribution via the learned original time-dependent score functions).
+It's as if the $64^2$-dimensional space contains multiple times the original $32^2$-dimensional image space. This leads sub-windows to generate the same class of object (attracted by the data distribution via the learned original time-dependent score functions).
 
 ---
-
-Qualitatively speaking, the attention mechanism seems to slightly affect the generation by making the entire image look like the object despited being composed of same smaller objects. Intuitively, the multi-head self-attention may bias the generation towards globally more "consistent" images (e.g. the last class: boot).
-
-
+<!-- Far-fetched
+Qualitatively speaking, the attention mechanism seems to slightly affect the generation by making the entire image look like the object despite being composed of the same smaller objects. Intuitively, the multi-head self-attention may bias the generation towards globally more "consistent" images (e.g. the last class: boot).
 ---
+-->
 
-The idea of applying our model to higher resolution images is inspired by [High-Resolution Image Synthesis with Latent Diffusion Models](https://arxiv.org/abs/2112.10752)'s convolutional sampling (paper by Rombach et al).
+
+The idea of applying our model to higher-resolution images comes from [High-Resolution Image Synthesis with Latent Diffusion Models](https://arxiv.org/abs/2112.10752)' convolutional sampling (paper by Rombach et al).
 
 ## Practical "lessons"
 
 - Bigger network for more capacity. Going from 2M to 33M parameters (or more): randomly positioned eyes (and more than $2$) to recognizable faces (probably thanks to the Multi-head self-attention layers and bigger receptive fields!)
 - Trade-off between model architecture and batch size for higher resolution images due to VRAM limits.
-- We have to place the Multi-head self-attention layers in lower spatial resolution due to the quadratic complexity in attention. A spatial resolution $32^2=32 \times 32$ or $16^2 = 16 \times 16$ is intuitively enough to capture the long-range contextual information/dependencies and costs way less than a spatial resolution of $128^2$. On the other hand convolution layers, at both high and low spatial resolution, fix "local" inconsistencies (up to the receptive field size).
-- Ablation of Multi-head self-attention only slightly affect the visual quality probably due to big enough receptive fields.
+- We have to place the Multi-head self-attention layers in lower spatial resolution due to the quadratic complexity in attention. A spatial resolution of $32^2=32 \times 32$ or $16^2 = 16 \times 16$ is intuitively enough to capture the long-range contextual information/dependencies and costs way less than a spatial resolution of $128^2$. On the other hand convolution layers, at both high and low spatial resolution, fix "local" inconsistencies (up to the receptive field size).
+- Ablation of Multi-head self-attention only slightly affects the visual quality probably due to big enough receptive fields.
