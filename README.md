@@ -44,7 +44,7 @@ pip3 install -r requirements.txt
 
 The code was developed for Python 3.11.13 with torch==2.1.1 and torchvision==0.16.1. Using a different Python version might cause problems. The computations were performed at University of Geneva using Baobab/Yggdrasil HPC service (Titan RTX gpus).
 
-For FashionMNIST and CIFAR-10, our current version uses around 591 MiB of VRAM for `./src/sample_all_cond.py` and around 2510MiB of VRAM for `./src/sampler.py`. For CelebA, our current version uses around 4215MiB of VRAM for `./src/sampler.py`.
+For FashionMNIST and CIFAR-10, our current version uses around 591 MiB of VRAM for `./src/sample_all_cond.py` and around 2510MiB of VRAM for `./src/sampler.py`. For CelebA (tiny model), our current version uses around 4215MiB of VRAM for `./src/sampler.py`.
 
 ## Configuration
 
