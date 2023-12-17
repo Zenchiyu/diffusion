@@ -1,10 +1,18 @@
 defaults:
   - _self_
-  # Add one of the following right after to use a pre-trained model
-  # - /cifar10/small_v1@_here_
-  # - /fashionmnist/small_v1@_here_
-  # - /celeba/small_v1@_here
-  # - /celeba/big_v1@_here
+  # Add one of the following right after to use a trained model
+  # - /cifar10/cond@_here_
+  # - /cifar10/cond_ablation_attention@_here_
+  # - /cifar10/uncond@_here_
+
+  # - /fashionmnist/cond@_here_
+  # - /fashionmnist/cond_ablation_attention@_here_
+  # - /fashionmnist/uncond@_here_
+
+  # - /celeba/uncond_big@_here_
+  # - /celeba/uncond_small@_here_
+  # - /celeba/uncond_tiny@_here_
+  # - /celeba/uncond_tiny_ablation_attention@_here_
 
 wandb:
   project: diffusion

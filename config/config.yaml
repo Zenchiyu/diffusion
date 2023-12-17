@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - /fashionmnist/cond@_here_
-  # Add one of the following right after to use a pre-trained model
+  # Add one of the following right after to use a trained model
   # - /cifar10/cond@_here_
   # - /cifar10/cond_ablation_attention@_here_
   # - /cifar10/uncond@_here_
