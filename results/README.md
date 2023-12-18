@@ -42,14 +42,14 @@ The lower the FID, the better it should be.
 
 ### CelebA (Work In Progress)
 
-- **Unconditional FID:**
+- **Unconditional FID using 50 stochastic Heun steps instead of Euler steps:**
 
     |                    | Train*  | Val*    | Test        |
     |--------------------|---------|---------|-------------|
     | big  |   |  |  |
-    | small  |   |  |  |
-    | tiny  |   |  |  |
-    | tiny w/o self-attention |   |  |  |
+    | small  | 17.8853  |  18.9739 | 18.2885 |
+    | tiny  |  22.0655 | 23.1863 | 21.8915 |
+    | tiny w/o self-attention |  26.6725 | 27.6983 | 26.3588 |
 
 ## Qualitative results and discussion
 
