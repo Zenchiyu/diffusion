@@ -20,7 +20,7 @@ model:
   cond_channels: 8
   self_attentions: [False, False, False]
   self_attention_bridge: False
-  nb_heads: [0, 0, 4]  # twice the num. of heads than before 
+  nb_heads: [0, 0, 0] 
 
 optim:  # Adam optimizer
   lr: 1e-4

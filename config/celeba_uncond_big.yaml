@@ -57,4 +57,4 @@ model:
   cond_channels: 8
   self_attentions: [False, False, True, True]
   self_attention_bridge: True
-  nb_heads: [1, 2, 4, 8]
+  nb_heads: [0, 0, 4, 8]
