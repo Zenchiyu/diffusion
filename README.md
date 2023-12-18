@@ -121,7 +121,7 @@ defaults:
 
 You can directly use the FashionMNIST and CIFAR-10 checkpoints.
 
-For CelebA: **TODO: add a link to download the checkpoints.**
+For CelebA, you can download the checkpoints from [this Google Drive](https://drive.google.com/drive/folders/1FXN5McvvpWZG-5pzj7ii7smdrs7Pcvqx?usp=sharing) and place them under the correct directory specified by the configuration files in `./config/celeba`.
 
 
 ## Training
@@ -183,7 +183,6 @@ See `./results/README.md`.
 
 # TODO list
 
-- Link CelebA checkpoints
 - Reduce memory footprint (mostly in training)
 - Decouple sampling and training procedures (incl. the initializations).
 - Nearest neighbors in Inception V3 feature space.
