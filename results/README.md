@@ -162,7 +162,7 @@ The idea of applying our model to higher-resolution images comes from [High-Reso
 - Ablation of Multi-head self-attention only slightly affects the visual quality probably due to big enough receptive fields.
 
 **Not reported in this work:**
-- **Concatenative U-Net skip connections** are relevant. Removing them leads to noisy pictures or weird textures.
+- **Concatenative U-Net skip connections** are relevant when up-sampling consisted of a nearest interpolation and a $1\times1$ convolution. Removing them lead to noisy pictures or weird textures.
 - **Positional encoding is not often used** in U-Net with attention architectures in contrast to GPT-like transformers. [How Much Position Information Do Convolutional Neural Networks Encode?](https://arxiv.org/abs/2001.08248) ICLR  paper provides an explanation of the implicit positional information given by convolutional neural networks.
     Their conclusion states the following:
     > In this paper we explore the hypothesis that absolute position information is implicitly encoded
