@@ -20,7 +20,7 @@ wandb:
 wandb_watch: True  # log more info
 
 common:
-  nb_epochs: 100  # people usually track n° of gradient steps instead
+  nb_epochs: 125  # people usually track n° of gradient steps instead
   sampling:
     method: stochastic_heun  # stochastic (euler), stochastic_heun, null (euler), heun
     num_steps: 50

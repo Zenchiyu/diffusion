@@ -5,9 +5,9 @@ Deep Learning Project on Diffusion Models for Image Generation based on [Elucida
 
 ### Unconditional
 
-**CelebA epoch 100, 50 Heun method steps, 35M parameters U-Net model:**
+**CelebA epoch 125, 50 stochastic heun method steps, 35M parameters U-Net model:**
 
-| <img src="./results/images/celeba/heun/uncond_64.png" width=500> | <img src="./results/images/celeba/heun/iterative_denoising_process.png" width=500> |
+| <img src="./results/images/celeba/stochastic_heun/uncond_tiny_64.png" width=500> | <img src="./results/images/celeba/stochastic_heun/uncond_tiny_iterative_denoising_process.png" width=500> |
 |:--:| :--:|
 | *Randomly generated faces* | *An iterative denoising process* |
 
