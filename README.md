@@ -1,7 +1,7 @@
 # Diffusion
 Deep Learning Project on Diffusion Models for Image Generation based on [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)'s paper by Karras et al.
 
-## Generated samples
+## Some generated images
 
 ### Unconditional
 
