@@ -115,6 +115,7 @@ def init_sampling(cfg: DictConfig) -> InitSample:
     # Initialization
     init_tuple = init(cfg)  # TODO: make it more efficient
     model, diffusion, info, dl = init_tuple.model, init_tuple.diffusion, init_tuple.info, init_tuple.dl
+    del init_tuple
     try:
         sampling_method = cfg.common.sampling.method
     except:

@@ -58,7 +58,7 @@ def sample_chunked(nb_chunks=2, **kwargs) -> torch.Tensor:
     
     return torch.cat([sample(**new_kwargs(label)) for label in chunked_labels], dim=0)
 
-@torch.no_grad()
+@torch.inference_mode()
 def sample(
         num_samples: int,
         image_channels: int,
@@ -114,7 +114,7 @@ def sample(
     # Final X_noisy contains the sampled images
     return X_noisy
 
-@torch.no_grad()
+@torch.inference_mode()
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sampler(cfg: DictConfig):
     model, diffusion, info, _, sampling_method, path, cfgscale_str = init_sampling(cfg)

@@ -7,7 +7,7 @@ from utils import save
 
 from omegaconf import DictConfig
 
-@torch.no_grad()
+@torch.inference_mode()
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def sample_all_cond(cfg: DictConfig):
     model, diffusion, info, _, sampling_method, path, cfgscale_str = init_sampling(cfg)

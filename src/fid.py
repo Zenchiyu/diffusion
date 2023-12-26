@@ -31,7 +31,7 @@ def create_directories(
     fid_path.mkdir(parents=True, exist_ok=True)
     return ref_paths, gen_path, fid_path
 
-@torch.no_grad()
+@torch.inference_mode()
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def compute_fid(cfg: DictConfig):
     # Change this to True if you have a class-conditioned model

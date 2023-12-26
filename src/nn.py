@@ -24,7 +24,7 @@ def create_image_directory(
     nn_path.mkdir(parents=True, exist_ok=True)
     return ref_path, gen_path, nn_path
 
-@torch.no_grad()
+@torch.inference_mode()
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def nearest_neighbors(cfg: DictConfig):
     sampling_method = init_sampling(cfg).sampling_method

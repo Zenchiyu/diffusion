@@ -8,6 +8,7 @@ from pathlib import Path
 from PIL import Image
 from torchvision.utils import make_grid
 
+
 def copy_config(run: wandb.sdk.wandb_run.Run,
                 begin_date: str,
                 config_name: str="config") -> None:
