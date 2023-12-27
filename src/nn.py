@@ -43,7 +43,5 @@ def nearest_neighbors(cfg: DictConfig):
     nn = nn.view(num_gen*(1+num_nn), 3, info.image_size, -1)  # 3 channels even if grayscale
     save(nn, nn_path / "image_space_nn.png", nrow=num_nn+1)
 
-    # TODO: fix num_ref
-
 if __name__ == "__main__":
     nearest_neighbors()
