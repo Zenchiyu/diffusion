@@ -49,14 +49,15 @@ def sampling_process(
 def sample_chunked(nb_chunks=2, **kwargs) -> torch.Tensor:
     assert kwargs["num_samples"] % nb_chunks == 0,\
         "num_samples should be a multiple of the number of chunks"
-    num_samples = kwargs["num_samples"]//nb_chunks
-    label = kwargs.get("label", None)
+    num_samples, label = kwargs["num_samples"]//nb_chunks, kwargs.get("label", None)
     chunked_labels = nb_chunks*[label] if ((label is None) or isinstance(label, int)) else label.chunk(nb_chunks)
     
     def new_kwargs(label: Optional[torch.Tensor]=None) -> torch.Tensor:
         return kwargs | {"num_samples": num_samples, "label": label}
     
-    return tuple(map(lambda el: torch.cat(el, dim=0), zip(*[sample(**new_kwargs(label)) for label in chunked_labels])))
+    if kwargs.get("track_inter", False):
+        return tuple(map(lambda el: torch.cat(el, dim=0), zip(*[sample(**new_kwargs(label)) for label in chunked_labels])))
+    return torch.cat([sample(**new_kwargs(label)) for label in chunked_labels], dim=0)
 
 @torch.inference_mode()
 def sample(
