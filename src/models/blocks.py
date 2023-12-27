@@ -129,8 +129,8 @@ class CondUpDownBlock(CondResSeq):
                  updown_state: State=State.NONE) -> None:
         # All the conditioning go into the normalization layers
         # nb_heads is ignored if self_attention is False
-        self.updown_state, self.layers = updown_state, []
-        mid, process = mid_channels, None
+        self.updown_state = updown_state
+        layers, mid, process = [], mid_channels, None
 
         # Down-/up-sampling. Half nb of channels in upsampling
         # Karras used a conv layer with fixed kernel for both up/down
@@ -142,11 +142,11 @@ class CondUpDownBlock(CondResSeq):
             noc = out_channels if i == nb_layers-1 else mid
             norm = lambda nb_channels: CondBatchNorm2d(nb_channels, cond_channels)  # a different norm per layer
             
-            self.layers.append(CondResidualBlock(in_channels=nic, mid_channels=mid, out_channels=noc, cond_channels=cond_channels))
+            layers.append(CondResidualBlock(in_channels=nic, mid_channels=mid, out_channels=noc, cond_channels=cond_channels))
             if self_attention:
-                self.layers.append(MHSelfAttention2d(in_channels=noc, nb_heads=nb_heads, norm=norm))
+                layers.append(MHSelfAttention2d(in_channels=noc, nb_heads=nb_heads, norm=norm))
 
-        super().__init__(self.layers, process=process)
+        super().__init__(layers, process=process)
 
     def forward(self,
                 x: torch.Tensor,

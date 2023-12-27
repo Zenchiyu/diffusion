@@ -183,7 +183,7 @@ See `./results/README.md`.
 
 # TODO list
 
-- Reduce memory footprint (mostly in training)
+- Reduce memory footprint (mostly in training) (PyTorch Memory Snapshot tool points to the self-attention)
 - Decouple sampling and training procedures (incl. the initializations).
 - Nearest neighbors in Inception V3 feature space.
 - Report the effect of U-Net encoder-decoder skip connections ablation
@@ -207,3 +207,4 @@ The computations were performed at the University of Geneva using the Baobab/Ygg
 - https://github.com/zalandoresearch/fashion-mnist
 - https://www.cs.toronto.edu/~kriz/cifar.html
 - https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+- https://pytorch.org/blog/understanding-gpu-memory-1/

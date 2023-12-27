@@ -44,19 +44,19 @@ def sampling_process(
 
         # Track the iterative procedure
         X_inter[i+1] = X_noisy
-    return X_noisy, X_inter
+    return X_noisy, X_inter.transpose(0, 1)
 
 def sample_chunked(nb_chunks=2, **kwargs) -> torch.Tensor:
     assert kwargs["num_samples"] % nb_chunks == 0,\
         "num_samples should be a multiple of the number of chunks"
     num_samples = kwargs["num_samples"]//nb_chunks
     label = kwargs.get("label", None)
-    chunked_labels = label.chunk(nb_chunks) if label is not None else num_samples*[None]
+    chunked_labels = nb_chunks*[label] if ((label is None) or isinstance(label, int)) else label.chunk(nb_chunks)
     
     def new_kwargs(label: Optional[torch.Tensor]=None) -> torch.Tensor:
-        return kwargs| {"num_samples": num_samples, "label": label}
+        return kwargs | {"num_samples": num_samples, "label": label}
     
-    return torch.cat([sample(**new_kwargs(label)) for label in chunked_labels], dim=0)
+    return tuple(map(lambda el: torch.cat(el, dim=0), zip(*[sample(**new_kwargs(label)) for label in chunked_labels])))
 
 @torch.inference_mode()
 def sample(
@@ -123,19 +123,24 @@ def sampler(cfg: DictConfig):
     prefix = "cond" if cfg.common.sampling.label else "uncond"
     suffix = f'_class_{cfg.common.sampling.label}_cfgscale_{cfgscale_str}' if cfg.common.sampling.cfg_scale else ''
     N, C, H, W = 8*8, info.image_channels, info.image_size, info.image_size
-    samples, samples_inter = sample(
-            N, C, H, model, diffusion,
-            uncond_label=info.num_classes,
-            label=cfg.common.sampling.label,
-            cfg_scale=cfg.common.sampling.cfg_scale,
-            num_steps=cfg.common.sampling.num_steps,
-            track_inter=True,
-            sampling_method=sampling_method
-        )
+    kwargs = {
+        "num_samples": N,
+        "image_channels": C,
+        "image_size": H,
+        "model": model,
+        "diffusion": diffusion,
+        "uncond_label": info.num_classes,
+        "label": cfg.common.sampling.label,
+        "cfg_scale": cfg.common.sampling.cfg_scale,
+        "num_steps": cfg.common.sampling.num_steps,
+        "track_inter": True,
+        "sampling_method": sampling_method,
+    }
+    samples, samples_inter = sample(**kwargs)   # sample_chunked(nb_chunks=8, **kwargs) if memory issues
 
     save(samples, path / f"{prefix}_{N}{suffix}.png")
     # Save intermediate generation steps for the first generated picture
-    save(samples_inter[:, 0].view(-1, C, H, W), path / f"iterative_denoising_process{suffix}.png")
-    
+    save(samples_inter[0, :].view(-1, C, H, W), path / f"iterative_denoising_process{suffix}.png")
+
 if __name__ == "__main__":
     sampler()
