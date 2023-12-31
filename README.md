@@ -121,7 +121,7 @@ defaults:
 
 You can directly use the FashionMNIST and CIFAR-10 checkpoints.
 
-For CelebA, you can download the checkpoints from [this Google Drive](https://drive.google.com/drive/folders/1FXN5McvvpWZG-5pzj7ii7smdrs7Pcvqx?usp=sharing) and place them under the correct directory specified by the configuration files in `./config/celeba`.
+For CelebA, you can download the checkpoints from [this Google Drive](https://drive.google.com/drive/folders/1FXN5McvvpWZG-5pzj7ii7smdrs7Pcvqx?usp=sharing) and place them under the correct directory specified by the configuration files in `./config/celeba`. The CelebA models took around 5 days to train on a Titan RTX GPU.
 
 
 ## Training
