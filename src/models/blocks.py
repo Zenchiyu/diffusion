@@ -26,10 +26,7 @@ class CondResSeq(CondModule):
         y = self.process(x)
         y = y if skip is None else torch.cat([y, skip], dim=1)  # channel-wise
         for layer in self.layers:
-            if isinstance(layer, CondModule):
-                y = layer(y, cond)
-            else:
-                y = layer(y)
+            y = layer(y, cond) if isinstance(layer, CondModule) else layer(y)
         return y
 
 class NoiseEmbedding(nn.Module):
