@@ -12,7 +12,7 @@ class UNet(nn.Module):
                  cond_channels: int,
                  self_attentions: bool|list[bool] = True,
                  self_attention_bridge: bool=True,
-                 nb_heads: int=2,
+                 nb_heads: list[int]=2,
                  nb_classes: Optional[int]=None):
         super().__init__()
         assert (len(depths) >= 1)
@@ -23,6 +23,11 @@ class UNet(nn.Module):
         self.nb_classes = nb_classes
         self.noise_emb = NoiseEmbedding(cond_channels)
         if self.nb_classes: self.label_emb = LabelEmbedding(nb_classes+1, cond_channels)  # incl. fake label to represent uncond.
+        self.cond_proj = nn.Sequential(
+            nn.Linear(cond_channels, cond_channels),
+            nn.SiLU(),
+            nn.Linear(cond_channels, cond_channels)
+        )
 
         self.conv_in = nn.Conv2d(image_channels, min_channels, kernel_size=3, padding=1)
         down_blocks  = []
@@ -67,7 +72,8 @@ class UNet(nn.Module):
         cond = self.noise_emb(c_noise)
         # Classifier-Free Guidance
         cond += self.label_emb(c_label) if (c_label is not None and self.nb_classes is not None) else 0
-        
+        cond = self.cond_proj(cond)
+
         ## Forward w/ conditioning
         x = self.conv_in(noisy_input)
         skips = []

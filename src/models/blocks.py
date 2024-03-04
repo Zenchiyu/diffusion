@@ -56,13 +56,13 @@ class CondBatchNorm2d(CondModule):
                  nb_channels: int,
                  cond_channels: int) -> None:
         super().__init__()
-        self.bn_params = nn.Linear(cond_channels, 2*nb_channels)
+        self.linear = nn.Linear(cond_channels, 2*nb_channels)
         self.norm = nn.BatchNorm2d(nb_channels, affine=False)
 
     def forward(self,
                 x: torch.Tensor,
                 cond: torch.Tensor) -> torch.Tensor:
-        gamma, beta = self.bn_params(cond)[:, :, None, None].chunk(2, dim=1)  # N x C x 1 x 1 each
+        gamma, beta = self.linear(cond)[:, :, None, None].chunk(2, dim=1)  # N x C x 1 x 1 each
         return beta + gamma*self.norm(x)
  
 class CondResidualBlock(CondModule):
@@ -79,8 +79,8 @@ class CondResidualBlock(CondModule):
         self.norm2 = CondBatchNorm2d(mid_channels, cond_channels)
         self.conv2 = nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1)
 
-        if out_channels != in_channels:
-            self.proj = nn.Conv2d(in_channels, out_channels, kernel_size=1)  # spatial-resolution unchanged
+        # match the n° of channels, keep spatial-resolution unchanged
+        self.in_proj = nn.Conv2d(in_channels, out_channels, kernel_size=1) if out_channels != in_channels else nn.Identity()
         # XXX: Karras did some special init incl. nn.init.orthonogal_
     
     def forward(self,
@@ -88,10 +88,8 @@ class CondResidualBlock(CondModule):
                 cond: torch.Tensor) -> torch.Tensor:
         y = self.conv1(F.relu(self.norm1(x, cond)))
         y = self.conv2(F.relu(self.norm2(y, cond)))
-        if x.shape != y.shape:
-            return self.proj(x) + y
-        return x + y
-
+        return self.in_proj(x) + y
+        
 class MHSelfAttention2d(CondModule):
     def __init__(self,
                  in_channels: int,
@@ -101,7 +99,7 @@ class MHSelfAttention2d(CondModule):
         assert in_channels % nb_heads == 0, "q,k,v emb. dim: in_channels/nb_heads should be an integer"
         self.nb_heads, self.norm = nb_heads, norm(in_channels)
         self.qkv_proj = nn.Conv2d(in_channels, in_channels*3, kernel_size=1)
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # out_proj shape unchanged because already correct
+        self.out_proj = nn.Conv2d(in_channels, in_channels, kernel_size=1)  # out_proj shape unchanged because already correct
         # XXX: Karras set weights and biases of conv to 0 initially
         
     def forward(self,
@@ -112,7 +110,7 @@ class MHSelfAttention2d(CondModule):
         Q, K, V = (qkv.transpose(-1, -2)).chunk(3, dim=1)                              # N x nb_heads x HW x C//nb_heads each
         Y = F.scaled_dot_product_attention(Q, K, V)                                    # N x nb_heads x HW x C//nb_heads
         y = Y.transpose(-1, -2).reshape(*x.shape)                                      # N x C x H x W
-        return x + self.conv(y)
+        return x + self.out_proj(y)
 
 class CondUpDownBlock(CondResSeq):
     def __init__(self,
