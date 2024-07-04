@@ -1,5 +1,5 @@
 common:
-  nb_epochs: 100
+  nb_epochs: 125
   training:
     p_uncond: 0.2
     chkpt_path: ./checkpoints/2023-12-14/run_68jizu4x/checkpoint.pth
